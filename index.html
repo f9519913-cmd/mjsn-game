@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>苗疆 · 蜉蝣 | 接API文游</title>
+    <style>
+        /* 全局沉浸风格 - 优化手机显示 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #1d2b35;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', '华文楷体', 'KaiTi', 'Microsoft YaHei', serif;
+            padding: 10px;
+            background-image: radial-gradient(circle at 30% 30%, #2f4b3c 0%, #10221b 100%);
+            font-size: 14px; /* 手机基础字体 */
+        }
+
+        /* ----- 独立链接入口 ----- */
+        .entry-portal {
+            text-align: center;
+            background: rgba(240, 235, 215, 0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid #b69e7c;
+            border-radius: 40px 40px 20px 20px;
+            padding: 2rem 2rem;
+            box-shadow: 0 30px 40px #00000060, 0 0 0 2px #5f7b68 inset;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .entry-portal h1 {
+            font-size: 2.5rem;
+            color: #fbefcf;
+            text-shadow: 0 4px 0 #3d523c, 0 8px 8px #0a0f0a;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+        }
+
+        .entry-portal p {
+            font-size: 1.1rem;
+            color: #dcd0b3;
+            margin-bottom: 30px;
+            font-style: italic;
+            border-bottom: 1px dashed #b9a477;
+            padding-bottom: 15px;
+        }
+
+        .enter-game-link {
+            display: inline-block;
+            background: linear-gradient(145deg, #ebc47f, #c89f4a);
+            color: #17281f;
+            font-size: 1.8rem;
+            font-weight: bold;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 10px 0 #7a6138, 0 10px 20px black;
+            border: 2px solid #ffeec2;
+        }
+
+        /* ----- 游戏主界面 (优化手机布局) ----- */
+        .game-main {
+            max-width: 500px;
+            width: 100%;
+            background: #1d382bc0;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: 30px 30px 20px 20px;
+            padding: 15px;
+            border: 2px solid #b39260;
+            box-shadow: 0 20px 30px #000000b0;
+            color: #f4ecd9;
+            display: none;
+        }
+
+        /* 头部 */
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #a98f5f;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+
+        .game-title {
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #f7e1a4, #e7b86b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .api-badge {
+            background: #1f4030;
+            padding: 5px 12px;
+            border-radius: 30px;
+            border: 1px solid #efc48c;
+            color: #fbddb5;
+            font-size: 0.8rem;
+        }
+
+        /* 属性栏 - 做成紧凑网格，手机一屏可见 */
+        .stats-panel {
+            background: #103326d0;
+            border-radius: 20px;
+            padding: 10px;
+            border: 1px solid #baa06a;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: #08211460;
+            border-radius: 20px;
+            padding: 3px 6px;
+            border-left: 2px solid #a57c4b;
+        }
+
+        .stat-label {
+            color: #e5ca92;
+            min-width: 30px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #f2e0b5;
+        }
+
+        .time-loc {
+            grid-column: span 4;
+            display: flex;
+            justify-content: space-between;
+            color: #ffddaa;
+            background: #08211460;
+            border-radius: 20px;
+            padding: 5px 10px;
+        }
+
+        /* 故事区 - 固定高度，可滚动 */
+        .story-narrative {
+            background: #102d1dd9;
+            border-radius: 20px;
+            padding: 15px;
+            margin: 8px 0;
+            border: 1px solid #caae77;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            max-height: 150px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .story-narrative .inner-thought {
+            color: #f8d58c;
+            font-style: italic;
+            border-left: 4px solid #a7763d;
+            padding-left: 10px;
+            margin: 8px 0;
+        }
+
+        /* 人际关系和物品板块 - 双栏布局 */
+        .social-items-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        /* 人际关系板块 */
+        .relationship-panel {
+            background: #1b3427e0;
+            border-radius: 15px;
+            padding: 10px;
+            border: 1px solid #a4824e;
+        }
+
+        .panel-title {
+            color: #f8d58c;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-bottom: 1px dashed #a4824e;
+            padding-bottom: 3px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .character-list {
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .character-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #08211460;
+            border-radius: 12px;
+            padding: 4px 6px;
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+        }
+
+        .character-name {
+            color: #ffddaf;
+            font-weight: 500;
+        }
+
+        .character-favor {
+            color: #f8b56c;
+            font-size: 0.7rem;
+        }
+
+        .interact-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .interact-btn {
+            background: #264e38;
+            border: 1px solid #dbb063;
+            color: #ffefcf;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 0.65rem;
+            cursor: pointer;
+        }
+
+        /* 物品板块 */
+        .items-panel {
+            background: #1b3427e0;
+            border-radius: 15px;
+            padding: 10px;
+            border: 1px solid #a4824e;
+        }
+
+        .items-list {
+            max-height: 100px;
+            overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .item-tag {
+            background: #264e38;
+            border: 1px solid #b3915a;
+            border-radius: 15px;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            color: #ffefcf;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* API 指示器 */
+        .api-indicator {
+            display: flex;
+            align-items: center;
+            background: #263f30;
+            border-radius: 30px;
+            padding: 5px 15px;
+            gap: 10px;
+            border: 1px solid #dcaa5e;
+            margin: 5px 0;
+            color: #ffddaf;
+            font-size: 0.8rem;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fad68f;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+
+        /* 选项按钮 */
+        .choice-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .choice-btn {
+            background: #264e38;
+            border: 2px solid #dbb063;
+            color: #ffefcf;
+            padding: 8px 4px;
+            font-size: 0.8rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #153a25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 自由输入 */
+        .free-input-area {
+            display: flex;
+            gap: 6px;
+            background: #1b3427e0;
+            border-radius: 30px;
+            padding: 3px 3px 3px 15px;
+            border: 2px solid #a4824e;
+            margin: 8px 0;
+        }
+
+        .free-input-area input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #f5e1b9;
+            font-size: 0.9rem;
+            outline: none;
+            padding: 6px 0;
+        }
+
+        .free-submit {
+            background: #96734a;
+            border: none;
+            color: #faf0ce;
+            font-size: 0.9rem;
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 0 #4d3e28;
+            border: 1px solid #e3bc82;
+            white-space: nowrap;
+        }
+
+        /* 底部按钮 */
+        .footer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            gap: 5px;
+        }
+
+        .back-to-entry, .restart-story {
+            background: #1f4430;
+            border: 1px solid #c2a062;
+            color: #ead5b0;
+            padding: 8px 12px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .hint-message {
+            color: #d5c09f;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 独立链接入口 -->
+<div id="entryPortal" class="entry-portal">
+    <h1>🌺 苗疆 · 蜉蝣</h1>
+    <p>—— 扮演一位少女，度过她的一生 ——</p>
+    <a href="#" id="enterGameLink" class="enter-game-link">⏣ 进入寨子 ⏣</a>
+    <div class="entry-footer" style="margin-top:20px; color:#b4bb9e; font-size:0.9rem;">
+        <span>🎋 依山结寨 · 听API为命 🎋</span>
+    </div>
+</div>
+
+<!-- 游戏主界面 -->
+<div id="gameMain" class="game-main">
+    <!-- 头部 -->
+    <div class="game-header">
+        <span class="game-title">🌱 接API · 苗疆纪</span>
+        <span class="api-badge">⚡ 天命API</span>
+    </div>
+
+    <!-- 紧凑属性栏 -->
+    <div class="stats-panel" id="statsPanel">
+        <div class="time-loc">
+            <span>📆 春二月·第<span id="weekNum">1</span>周</span>
+            <span>📍 青榕寨</span>
+        </div>
+        <div class="stat-item"><span class="stat-label">魅</span><span class="stat-value" id="statCha">52</span></div>
+        <div class="stat-item"><span class="stat-label">智</span><span class="stat-value" id="statWis">48</span></div>
+        <div class="stat-item"><span class="stat-label">体</span><span class="stat-value" id="statPhys">55</span></div>
+        <div class="stat-item"><span class="stat-label">才</span><span class="stat-value" id="statArt">44</span></div>
+        <div class="stat-item"><span class="stat-label">❤️</span><span class="stat-value" id="statHp">100</span></div>
+        <div class="stat-item"><span class="stat-label">⚡</span><span class="stat-value" id="statStam">100</span></div>
+        <div class="stat-item"><span class="stat-label">🌿</span><span class="stat-value" id="statHealth">95</span></div>
+        <div class="stat-item"><span class="stat-label">🧠</span><span class="stat-value" id="statMind">92</span></div>
+        <div class="stat-item"><span class="stat-label">💰</span><span class="stat-value" id="statMoney">25</span></div>
+    </div>
+
+    <!-- 故事区 -->
+    <div id="storyDisplay" class="story-narrative">
+        <p>晨雾还挂在吊脚楼角，你推开竹窗，青榕寨在鸟鸣中醒来。</p>
+        <div class="inner-thought">“要去看看吗？也许会遇见那个人……”</div>
+    </div>
+
+    <!-- 人际关系 + 物品 双栏板块 -->
+    <div class="social-items-panel">
+        <!-- 人际关系板块 -->
+        <div class="relationship-panel">
+            <div class="panel-title">
+                <span>👥 人际关系</span>
+                <span style="color:#f8b56c;">好感/爱慕</span>
+            </div>
+            <div id="characterList" class="character-list">
+                <!-- 动态生成角色 -->
+                <div class="character-item">
+                    <span class="character-name">阿妈</span>
+                    <span class="character-favor">❤️ 50/20</span>
+                    <div class="interact-btns">
+                        <button class="interact-btn" data-target="阿妈" data-action="talk">💬</button>
+                        <button class="interact-btn" data-target="阿妈" data-action="gift">🎁</button>
+                    </div>
+                </div>
+                <div class="character-item">
+                    <span class="character-name">养尤</span>
+                    <span class="character-favor">❤️ 12/5</span>
+                    <div class="interact-btns">
+                        <button class="interact-btn" data-target="养尤" data-action="talk">💬</button>
+                        <button class="interact-btn" data-target="养尤" data-action="gift">🎁</button>
+                    </div>
+                </div>
+                <div class="character-item">
+                    <span class="character-name">寨老</span>
+                    <span class="character-favor">❤️ 8/0</span>
+                    <div class="interact-btns">
+                        <button class="interact-btn" data-target="寨老" data-action="talk">💬</button>
+                        <button class="interact-btn" data-target="寨老" data-action="gift">🎁</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 物品板块 -->
+        <div class="items-panel">
+            <div class="panel-title">
+                <span>🎒 物品</span>
+                <span>数量</span>
+            </div>
+            <div id="itemsList" class="items-list">
+                <span class="item-tag">贝币 <span id="itemMoney">25</span></span>
+                <span class="item-tag">糯米糕 <span id="itemRicecake">0</span></span>
+                <span class="item-tag">绣线 <span id="itemThread">0</span></span>
+                <span class="item-tag">银镯 <span id="itemSilver">0</span></span>
+                <span class="item-tag">草药 <span id="itemHerb">0</span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- API 指示器 -->
+    <div class="api-indicator" id="apiIndicator">
+        <span id="apiMessage">⏳ 尚未召唤山神API</span>
+        <span id="apiSpinner" class="spinner" style="display: none;"></span>
+    </div>
+
+    <!-- 选项按钮 -->
+    <div id="choiceButtons" class="choice-buttons">
+        <button class="choice-btn" data-action="market">🌽 赶场</button>
+        <button class="choice-btn" data-action="lusheng">🎵 芦笙</button>
+        <button class="choice-btn" data-action="rest">🛏️ 帮阿妈</button>
+    </div>
+
+    <!-- 自由输入 -->
+    <div class="free-input-area">
+        <input type="text" id="freeActionInput" placeholder="✍️ 输入你想做的事...">
+        <button id="submitFreeAction" class="free-submit">召唤</button>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer-bar">
+        <a href="#" id="backToEntryBtn" class="back-to-entry">⏮ 返回入口</a>
+        <button id="restartGameBtn" class="restart-story">🔄 重开</button>
+        <span class="hint-message" id="gameHint">苗寨深处</span>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // 获取元素
+        const entryPortal = document.getElementById('entryPortal');
+        const gameMain = document.getElementById('gameMain');
+        const enterLink = document.getElementById('enterGameLink');
+        const backBtn = document.getElementById('backToEntryBtn');
+        const restartBtn = document.getElementById('restartGameBtn');
+
+        const storyDisplay = document.getElementById('storyDisplay');
+        const choiceButtonsDiv = document.getElementById('choiceButtons');
+        const apiMessageSpan = document.getElementById('apiMessage');
+        const apiSpinner = document.getElementById('apiSpinner');
+        const gameHint = document.getElementById('gameHint');
+        const freeInput = document.getElementById('freeActionInput');
+        const freeSubmit = document.getElementById('submitFreeAction');
+
+        // 数值显示
+        const statCha = document.getElementById('statCha');
+        const statWis = document.getElementById('statWis');
+        const statPhys = document.getElementById('statPhys');
+        const statArt = document.getElementById('statArt');
+        const statHp = document.getElementById('statHp');
+        const statStam = document.getElementById('statStam');
+        const statHealth = document.getElementById('statHealth');
+        const statMind = document.getElementById('statMind');
+        const statMoney = document.getElementById('statMoney');
+        const weekNum = document.getElementById('weekNum');
+
+        // 物品显示
+        const itemMoney = document.getElementById('itemMoney');
+        const itemRicecake = document.getElementById('itemRicecake');
+        const itemThread = document.getElementById('itemThread');
+        const itemSilver = document.getElementById('itemSilver');
+        const itemHerb = document.getElementById('itemHerb');
+
+        // 游戏状态
+        let currentState = {
+            week: 1, location: '青榕寨',
+            cha: 52, wis: 48, phys: 55, art: 44,
+            hp: 100, stam: 100, health: 95, mind: 92,
+            money: 25,
+            items: {
+                ricecake: 0,
+                thread: 0,
+                silver: 0,
+                herb: 0
+            },
+            characters: {
+                '阿妈': { favor: 50, love: 20 },
+                '养尤': { favor: 12, love: 5 },
+                '寨老': { favor: 8, love: 0 }
+            }
+        };
+
+        let isApiCalling = false;
+
+        // 刷新所有UI
+        function refreshUI() {
+            statCha.innerText = currentState.cha;
+            statWis.innerText = currentState.wis;
+            statPhys.innerText = currentState.phys;
+            statArt.innerText = currentState.art;
+            statHp.innerText = currentState.hp;
+            statStam.innerText = currentState.stam;
+            statHealth.innerText = currentState.health;
+            statMind.innerText = currentState.mind;
+            statMoney.innerText = currentState.money;
+            weekNum.innerText = currentState.week;
+
+            itemMoney.innerText = currentState.money;
+            itemRicecake.innerText = currentState.items.ricecake;
+            itemThread.innerText = currentState.items.thread;
+            itemSilver.innerText = currentState.items.silver;
+            itemHerb.innerText = currentState.items.herb;
+
+            // 刷新角色列表
+            refreshCharacterList();
+        }
+
+        // 刷新角色列表
+        function refreshCharacterList() {
+            const listDiv = document.getElementById('characterList');
+            listDiv.innerHTML = '';
+            for (let [name, data] of Object.entries(currentState.characters)) {
+                const item = document.createElement('div');
+                item.className = 'character-item';
+                item.innerHTML = `
+                    <span class="character-name">${name}</span>
+                    <span class="character-favor">❤️ ${data.favor}/${data.love}</span>
+                    <div class="interact-btns">
+                        <button class="interact-btn" data-target="${name}" data-action="talk">💬</button>
+                        <button class="interact-btn" data-target="${name}" data-action="gift">🎁</button>
+                    </div>
+                `;
+                listDiv.appendChild(item);
+            }
+
+            // 绑定交互按钮事件
+            document.querySelectorAll('.interact-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const target = btn.dataset.target;
+                    const action = btn.dataset.action;
+                    handleCharacterInteraction(target, action);
+                });
+            });
+        }
+
+        // 处理角色交互
+        function handleCharacterInteraction(target, action) {
+            if (isApiCalling) return;
+            let msg = '';
+            if (action === 'talk') {
+                msg = `和${target}交谈`;
+                currentState.characters[target].favor += 2;
+            } else if (action === 'gift') {
+                if (currentState.items.ricecake > 0) {
+                    msg = `送给${target}糯米糕`;
+                    currentState.items.ricecake -= 1;
+                    currentState.characters[target].favor += 5;
+                    currentState.characters[target].love += 2;
+                } else {
+                    alert('没有糯米糕可以送');
+                    return;
+                }
+            }
+            refreshUI();
+            callAdventureAPI(msg);
+        }
+
+        // 模拟API调用
+        function callAdventureAPI(actionDescription) {
+            if (isApiCalling) return;
+
+            isApiCalling = true;
+            apiMessageSpan.innerText = '🔮 山神API回应中......';
+            apiSpinner.style.display = 'inline-block';
+            gameHint.innerText = '卜筮问卦';
+
+            setTimeout(() => {
+                let storyAddition = '';
+                let promptLine = '';
+                let newChoices = [];
+                let hintUpdate = '';
+
+                if (actionDescription.includes('赶场') || actionDescription.includes('market')) {
+                    storyAddition = '你来到市集，买了糯米糕和绣线。遇见了养尤。';
+                    promptLine = '他朝你笑了笑。';
+                    newChoices = ['💬 和养尤聊天', '🎁 买绣线', '🌿 买草药'];
+                    currentState.money -= 5;
+                    currentState.items.ricecake += 2;
+                    currentState.items.thread += 1;
+                    hintUpdate = '糯米糕+2，绣线+1';
+                } 
+                else if (actionDescription.includes('芦笙') || actionDescription.includes('lusheng')) {
+                    storyAddition = '芦笙比试上，你舞步轻盈。寨老点头称赞。';
+                    promptLine = '才艺得到了认可。';
+                    newChoices = ['🏅 接受指点', '💧 去溪边', '🍠 买红薯'];
+                    currentState.art += 3;
+                    currentState.stam -= 5;
+                    currentState.characters['寨老'].favor += 5;
+                    hintUpdate = '才艺+3，寨老好感+5';
+                } 
+                else if (actionDescription.includes('帮阿妈') || actionDescription.includes('rest')) {
+                    storyAddition = '你帮阿妈染布，她教你新的绣法。';
+                    promptLine = '阿妈给了你一块银饰。';
+                    newChoices = ['🌸 试戴', '🍲 串门', '🪡 继续学'];
+                    currentState.art += 2;
+                    currentState.mind += 5;
+                    currentState.items.silver += 1;
+                    currentState.characters['阿妈'].favor += 3;
+                    hintUpdate = '银饰+1，阿妈好感+3';
+                }
+                else {
+                    storyAddition = `你：${actionDescription}`;
+                    promptLine = '山神默默注视着你。';
+                    newChoices = ['🌾 继续', '🗣️ 找人', '🏡 回家'];
+                    currentState.cha += 1;
+                    hintUpdate = '魅力+1';
+                }
+
+                // 边界限制
+                for (let key of ['cha','wis','phys','art','hp','stam','health','mind']) {
+                    if (currentState[key] > 100) currentState[key] = 100;
+                    if (currentState[key] < 0) currentState[key] = 0;
+                }
+
+                storyDisplay.innerHTML = `
+                    <p>${storyAddition}</p>
+                    <div class="inner-thought">✨ ${promptLine}</div>
+                `;
+
+                renderChoiceButtons(newChoices);
+                currentState.week += 1;
+                refreshUI();
+
+                isApiCalling = false;
+                apiMessageSpan.innerText = '✅ 山神已回应';
+                apiSpinner.style.display = 'none';
+                gameHint.innerText = hintUpdate || '命运流转';
+            }, 800);
+        }
+
+        function renderChoiceButtons(buttonLabels) {
+            choiceButtonsDiv.innerHTML = '';
+            buttonLabels.forEach(label => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = label;
+                btn.addEventListener('click', () => {
+                    if (isApiCalling) return;
+                    callAdventureAPI(label);
+                });
+                choiceButtonsDiv.appendChild(btn);
+            });
+        }
+
+        freeSubmit.addEventListener('click', () => {
+            const custom = freeInput.value.trim();
+            if (custom === '') return;
+            callAdventureAPI(custom);
+            freeInput.value = '';
+        });
+
+        function resetGame() {
+            currentState = {
+                week: 1, location: '青榕寨',
+                cha: 52, wis: 48, phys: 55, art: 44,
+                hp: 100, stam: 100, health: 95, mind: 92,
+                money: 25,
+                items: { ricecake: 0, thread: 0, silver: 0, herb: 0 },
+                characters: {
+                    '阿妈': { favor: 50, love: 20 },
+                    '养尤': { favor: 12, love: 5 },
+                    '寨老': { favor: 8, love: 0 }
+                }
+            };
+            storyDisplay.innerHTML = `
+                <p>晨雾还挂在吊脚楼角，你推开竹窗，青榕寨在鸟鸣中醒来。</p>
+                <div class="inner-thought">“要去看看吗？也许会遇见那个人……”</div>
+            `;
+            renderChoiceButtons(['🌽 赶场', '🎵 芦笙', '🛏️ 帮阿妈']);
+            refreshUI();
+            apiMessageSpan.innerText = '⏳ 尚未召唤山神API';
+            apiSpinner.style.display = 'none';
+        }
+
+        function enterGame() {
+            entryPortal.style.display = 'none';
+            gameMain.style.display = 'block';
+            resetGame();
+        }
+
+        function backToEntry() {
+            gameMain.style.display = 'none';
+            entryPortal.style.display = 'block';
+        }
+
+        enterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            enterGame();
+        });
+
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            backToEntry();
+        });
+
+        restartBtn.addEventListener('click', () => {
+            if (isApiCalling) return;
+            resetGame();
+        });
+
+        entryPortal.style.display = 'block';
+        gameMain.style.display = 'none';
+        refreshUI();
+    })();
+</script>
+</body>
+  </html>
