@@ -1,0 +1,2899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>苗疆 · 蜉蝣 | 接API文游</title>
+    <style>
+        /* 全局沉浸风格 - 优化手机显示 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #1d2b35;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', '华文楷体', 'KaiTi', 'Microsoft YaHei', serif;
+            padding: 10px;
+            background-image: radial-gradient(circle at 30% 30%, #2f4b3c 0%, #10221b 100%);
+            font-size: 14px;
+        }
+
+        /* ----- 独立链接入口 ----- */
+        .entry-portal {
+            text-align: center;
+            background: rgba(240, 235, 215, 0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid #b69e7c;
+            border-radius: 40px 40px 20px 20px;
+            padding: 2rem 2rem;
+            box-shadow: 0 30px 40px #00000060, 0 0 0 2px #5f7b68 inset;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .entry-portal h1 {
+            font-size: 2.5rem;
+            color: #fbefcf;
+            text-shadow: 0 4px 0 #3d523c, 0 8px 8px #0a0f0a;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+        }
+
+        .entry-portal p {
+            font-size: 1.1rem;
+            color: #dcd0b3;
+            margin-bottom: 30px;
+        }
+
+        .enter-game-link {
+            display: inline-block;
+            background: linear-gradient(145deg, #ebc47f, #c89f4a);
+            color: #17281f;
+            font-size: 1.8rem;
+            font-weight: bold;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 10px 0 #7a6138, 0 10px 20px black;
+            border: 2px solid #ffeec2;
+            cursor: pointer;
+        }
+
+        /* ----- 游戏主界面 ----- */
+        .game-main {
+            max-width: 500px;
+            width: 100%;
+            background: #1d382bc0;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: 30px 30px 20px 20px;
+            padding: 15px;
+            border: 2px solid #b39260;
+            box-shadow: 0 20px 30px #000000b0;
+            color: #f4ecd9;
+            display: none;
+            position: relative;
+        }
+
+        /* 存档按钮 - 右上角 */
+        .save-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #96734a;
+            border: 2px solid #dbb063;
+            color: #faf0ce;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .save-btn:hover {
+            background: #b58f5f;
+            transform: scale(1.05);
+        }
+
+        .save-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #264e38;
+            border: 2px solid #dbb063;
+            color: #f8d58c;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            animation: slideDown 0.3s, fadeOut 0.3s 2.7s;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes slideDown {
+            from { top: -50px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* 头部 */
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #a98f5f;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            padding-right: 40px; /* 为存档按钮留空间 */
+        }
+
+        .game-title {
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #f7e1a4, #e7b86b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .player-tags {
+            font-size: 0.7rem;
+            color: #f8b56c;
+            background: #264e38;
+            padding: 2px 6px;
+            border-radius: 15px;
+            display: inline-flex;
+            gap: 3px;
+        }
+
+        .api-badge {
+            background: #1f4030;
+            padding: 5px 12px;
+            border-radius: 30px;
+            border: 1px solid #efc48c;
+            color: #fbddb5;
+            font-size: 0.8rem;
+        }
+
+        /* 属性栏 */
+        .stats-panel {
+            background: #103326d0;
+            border-radius: 20px;
+            padding: 10px;
+            border: 1px solid #baa06a;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: #08211460;
+            border-radius: 20px;
+            padding: 3px 6px;
+            border-left: 2px solid #a57c4b;
+        }
+
+        .stat-label {
+            color: #e5ca92;
+            min-width: 30px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #f2e0b5;
+        }
+
+        .time-loc {
+            grid-column: span 4;
+            display: flex;
+            justify-content: space-between;
+            color: #ffddaa;
+            background: #08211460;
+            border-radius: 20px;
+            padding: 5px 10px;
+        }
+
+        /* 故事区 */
+        .story-narrative {
+            background: #102d1dd9;
+            border-radius: 20px;
+            padding: 18px;
+            margin: 8px 0;
+            border: 1px solid #caae77;
+            font-size: 1rem;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: inset 0 0 20px #00000040;
+            color: #f0e6d2;
+        }
+
+        .story-narrative p {
+            margin-bottom: 12px;
+        }
+
+        .story-narrative .inner-thought {
+            color: #f8d58c;
+            font-style: italic;
+            border-left: 4px solid #a7763d;
+            padding-left: 15px;
+            margin: 15px 0;
+        }
+
+        /* 标签导航栏 */
+        .tab-nav {
+            display: flex;
+            background: #1b3427e0;
+            border-radius: 30px;
+            padding: 5px;
+            margin: 8px 0;
+            border: 1px solid #a4824e;
+            justify-content: space-around;
+        }
+
+        .tab-item {
+            color: #e5ca92;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            flex: 1;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-item.active {
+            background: #264e38;
+            color: #f8d58c;
+            border: 1px solid #dbb063;
+        }
+
+        /* 内容面板 */
+        .content-panel {
+            background: #1b3427e0;
+            border-radius: 20px;
+            padding: 12px;
+            border: 1px solid #a4824e;
+            margin: 8px 0;
+            min-height: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .panel-hidden {
+            display: none;
+        }
+
+        /* 人际关系 - 人物卡片 */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .character-card {
+            background: #08211460;
+            border-radius: 15px;
+            padding: 8px;
+            border: 1px solid #a57c4b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .character-card:hover {
+            background: #264e38;
+            border-color: #f8d58c;
+        }
+
+        .character-card.selected {
+            border: 2px solid #f8d58c;
+            background: #264e38;
+        }
+
+        .character-card.dead {
+            opacity: 0.5;
+            filter: grayscale(1);
+            pointer-events: none;
+        }
+
+        .character-name {
+            color: #f8d58c;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .character-relation-badge {
+            font-size: 0.65rem;
+            color: #f8b56c;
+            background: #1a3a2a;
+            padding: 2px 6px;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 2px 0;
+        }
+
+        .character-relation {
+            font-size: 0.7rem;
+            color: #e5ca92;
+            margin: 2px 0;
+        }
+
+        .character-detail {
+            margin-top: 10px;
+            padding: 12px;
+            background: #103326d0;
+            border-radius: 15px;
+            border: 1px solid #a57c4b;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 6px 0;
+            font-size: 0.9rem;
+            border-bottom: 1px dashed #a57c4b;
+            padding-bottom: 4px;
+        }
+
+        .detail-label {
+            color: #e5ca92;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #f8d58c;
+            text-align: right;
+        }
+
+        .detail-desc {
+            margin-top: 8px;
+            padding: 8px;
+            background: #08211460;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #ffddaf;
+            line-height: 1.4;
+        }
+
+        .relation-stage, .love-stage {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .stage-hostile { background: #8b0000; color: #ffcccc; }
+        .stage-stranger { background: #4a4a4a; color: #e0e0e0; }
+        .stage-familiar { background: #2d5a2d; color: #ccffcc; }
+        .stage-friend { background: #2d4d6e; color: #cce5ff; }
+        .stage-close { background: #6b4d6b; color: #ffccff; }
+
+        .love-hate { background: #8b0000; color: #ffcccc; }
+        .love-stranger { background: #4a4a4a; color: #e0e0e0; }
+        .love-crush { background: #b45f5f; color: #ffe6e6; }
+        .love-dating { background: #b45fb4; color: #ffe6ff; }
+        .love-forever { background: #d4af37; color: #ffffe6; }
+
+        .status-dead {
+            opacity: 0.5;
+            filter: grayscale(1);
+            pointer-events: none;
+        }
+
+        .death-message {
+            background: #330000;
+            border: 2px solid #8b0000;
+            color: #ffaaaa;
+            padding: 20px;
+            text-align: center;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        /* 关系网络图 */
+        .relation-network {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 15px;
+            min-height: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #networkCanvas {
+            width: 100%;
+            height: 300px;
+            background: #0e281d;
+            border-radius: 10px;
+        }
+
+        /* 邀请面板 */
+        .invite-panel {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .invite-counter {
+            color: #f8d58c;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .location-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .location-btn {
+            background: #264e38;
+            border: 1px solid #dbb063;
+            color: #ffefcf;
+            padding: 6px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .location-btn.selected {
+            background: #96734a;
+            border-color: #f8d58c;
+        }
+
+        /* 随机NPC */
+        .random-npc {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 12px;
+            margin: 10px 0;
+            animation: fadeIn 0.5s;
+            border-left: 4px solid #d4af37;
+        }
+
+        /* 节日事件 */
+        .festival-event {
+            background: #d4af37;
+            color: #1d2b35;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            font-weight: bold;
+            animation: pulse 1s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        /* 吃醋事件 */
+        .jealousy-event {
+            background: #b45f5f;
+            color: #1d2b35;
+            border-radius: 15px;
+            padding: 12px;
+            margin: 10px 0;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 离婚面板 */
+        .divorce-panel {
+            background: #330000;
+            border: 2px solid #8b0000;
+            border-radius: 15px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .warning-text {
+            color: #ffaaaa;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }/* 聊天界面 */
+        .chat-interface {
+            background: #0e281dd0;
+            border-radius: 20px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid #b39260;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #a4824e;
+        }
+
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #264e38;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            border: 2px solid #dbb063;
+        }
+
+        .chat-title {
+            flex: 1;
+        }
+
+        .chat-name {
+            font-size: 1.2rem;
+            color: #f8d58c;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .chat-status {
+            font-size: 0.8rem;
+            color: #e5ca92;
+        }
+
+        .chat-messages {
+            background: #0a1f15;
+            border-radius: 15px;
+            padding: 12px;
+            min-height: 150px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            border: 1px solid #a4824e;
+        }
+
+        .message-left {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .message-left .bubble {
+            background: #1f4030;
+            padding: 8px 12px;
+            border-radius: 18px 18px 18px 4px;
+            max-width: 80%;
+            color: #f0e6d2;
+        }
+
+        .message-right {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .message-right .bubble {
+            background: #264e38;
+            padding: 8px 12px;
+            border-radius: 18px 18px 4px 18px;
+            max-width: 80%;
+            color: #f8d58c;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #0e281d;
+            border: 1px solid #b39260;
+            border-radius: 25px;
+            padding: 10px 15px;
+            color: #f4ecd9;
+            font-size: 0.9rem;
+        }
+
+        .chat-send {
+            background: #96734a;
+            border: none;
+            color: #faf0ce;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 背包物品列表 */
+        .backpack-panel {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #b39260;
+        }
+
+        .backpack-header {
+            display: flex;
+            justify-content: space-between;
+            color: #f8d58c;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #a4824e;
+        }
+
+        .backpack-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .backpack-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1a3a2a;
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid #a57c4b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .backpack-item:hover {
+            background: #264e38;
+            border-color: #f8d58c;
+        }
+
+        .backpack-item.selected {
+            background: #3a7054;
+            border: 2px solid #f8d58c;
+        }
+
+        .item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #0e281d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 1px solid #b3915a;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            color: #f8d58c;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .item-desc {
+            color: #e5ca92;
+            font-size: 0.75rem;
+        }
+
+        .item-count {
+            color: #ffddaf;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .empty-backpack {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* 地图网格 */
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .map-cell {
+            background: #264e38;
+            border: 1px solid #dbb063;
+            border-radius: 15px;
+            padding: 12px 5px;
+            text-align: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .map-cell.explored {
+            background: #3a7054;
+            border-color: #f8d58c;
+        }
+
+        .map-cell.event-triggered {
+            background: #96734a;
+            animation: pulse 1s;
+        }
+
+        .map-cell.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .map-cell.spring::after {
+            content: "🌸";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+        }
+
+        .map-cell.summer::after {
+            content: "☀️";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+        }
+
+        .map-cell.autumn::after {
+            content: "🍁";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+        }
+
+        .map-cell.winter::after {
+            content: "❄️";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+        }
+
+        .map-legend {
+            display: flex;
+            gap: 10px;
+            font-size: 0.7rem;
+            color: #e5ca92;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .map-event-choices {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .map-event-btn {
+            background: #264e38;
+            border: 2px solid #dbb063;
+            color: #ffefcf;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        /* 物品列表 */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .item-card {
+            background: #264e38;
+            border: 1px solid #b3915a;
+            border-radius: 15px;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        /* 设置面板 */
+        .settings-group {
+            margin-bottom: 15px;
+        }
+
+        .settings-label {
+            color: #f8d58c;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .settings-input, .settings-select {
+            width: 100%;
+            background: #103326;
+            border: 1px solid #a4824e;
+            border-radius: 15px;
+            padding: 8px 12px;
+            color: #f4ecd9;
+            margin-bottom: 10px;
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .model-selector select {
+            flex: 1;
+            background: #103326;
+            border: 1px solid #a4824e;
+            border-radius: 15px;
+            padding: 8px 12px;
+            color: #f4ecd9;
+        }
+
+        .refresh-models {
+            background: #96734a;
+            border: none;
+            color: #faf0ce;
+            padding: 8px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .settings-textarea {
+            width: 100%;
+            background: #103326;
+            border: 1px solid #a4824e;
+            border-radius: 15px;
+            padding: 8px 12px;
+            color: #f4ecd9;
+            min-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .settings-save {
+            background: #96734a;
+            border: none;
+            color: #faf0ce;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* API 指示器 */
+        .api-indicator {
+            display: flex;
+            align-items: center;
+            background: #263f30;
+            border-radius: 30px;
+            padding: 5px 15px;
+            gap: 10px;
+            border: 1px solid #dcaa5e;
+            margin: 5px 0;
+            color: #ffddaf;
+            font-size: 0.8rem;
+        }
+
+        .streaming-content {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #b39260;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #f0e6d2;
+            display: none;
+        }
+
+        .streaming-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .cursor-blink {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background-color: #f8d58c;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fad68f;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+
+        /* 选项按钮 */
+        .choice-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .choice-btn {
+            background: #264e38;
+            border: 2px solid #dbb063;
+            color: #ffefcf;
+            padding: 8px 4px;
+            font-size: 0.8rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #153a25;
+            transition: all 0.1s;
+        }
+
+        .choice-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #153a25;
+        }
+
+        .choice-btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* 自由输入 */
+        .free-input-area {
+            display: flex;
+            gap: 6px;
+            background: #1b3427e0;
+            border-radius: 30px;
+            padding: 3px 3px 3px 15px;
+            border: 2px solid #a4824e;
+            margin: 8px 0;
+        }
+
+        .free-input-area input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #f5e1b9;
+            font-size: 0.9rem;
+            outline: none;
+            padding: 6px 0;
+        }
+
+        .free-submit {
+            background: #96734a;
+            border: none;
+            color: #faf0ce;
+            font-size: 0.9rem;
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 0 #4d3e28;
+        }
+
+        .free-submit:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 0 #4d3e28;
+        }
+
+        .free-submit.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* 底部 */
+        .footer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            gap: 5px;
+        }
+
+        .back-to-entry, .restart-story {
+            background: #1f4430;
+            border: 1px solid #c2a062;
+            color: #ead5b0;
+            padding: 8px 12px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .next-turn-btn {
+            background: #96734a;
+            border: 2px solid #dbb063;
+            color: #faf0ce;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            box-shadow: 0 3px 0 #4d3e28;
+        }
+
+        .next-turn-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #4d3e28;
+        }
+
+        .hint-message {
+            color: #d5c09f;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 独立链接入口 -->
+<div id="entryPortal" class="entry-portal">
+    <h1>🌺 苗疆 · 蜉蝣</h1>
+    <p>—— 扮演一位少女，度过她的一生 ——</p>
+    <a href="#" id="enterGameLink" class="enter-game-link">🔍 进入寨子 🔍</a>
+    <div class="entry-footer" style="margin-top:20px; color:#b4bb9e; font-size:0.9rem;">
+        <span>🎋 存档自动保存 · 真实AI 🎋</span>
+    </div>
+</div>
+
+<!-- 游戏主界面 -->
+<div id="gameMain" class="game-main">
+    <!-- 存档按钮 - 右上角 -->
+    <div id="saveBtn" class="save-btn" title="手动存档">💾</div>
+    
+    <!-- 存档提示（动态创建） -->
+    
+    <!-- 头部 -->
+    <div class="game-header">
+        <div class="game-title">
+            <span>🌱 <span id="playerNameDisplay">阿苗</span> <span id="playerAge">18岁</span></span>
+            <span id="playerTags" class="player-tags"></span>
+        </div>
+        <span class="api-badge" id="apiModeBadge">⚡ 真实AI</span>
+    </div>
+
+    <!-- 属性栏 -->
+    <div class="stats-panel" id="statsPanel">
+        <div class="time-loc">
+            <span>📆 <span id="weekDisplay">春一月·第1周</span></span>
+            <span>📍 <span id="locationDisplay">青榕寨</span></span>
+        </div>
+        <div class="stat-item"><span class="stat-label">魅</span><span class="stat-value" id="statCha">52</span></div>
+        <div class="stat-item"><span class="stat-label">智</span><span class="stat-value" id="statWis">48</span></div>
+        <div class="stat-item"><span class="stat-label">体</span><span class="stat-value" id="statPhys">55</span></div>
+        <div class="stat-item"><span class="stat-label">才</span><span class="stat-value" id="statArt">44</span></div>
+        <div class="stat-item"><span class="stat-label">❤️</span><span class="stat-value" id="statHp">100</span></div>
+        <div class="stat-item"><span class="stat-label">🧠</span><span class="stat-value" id="statMind">92</span></div>
+        <div class="stat-item"><span class="stat-label">💰</span><span class="stat-value" id="statMoney">25</span></div>
+    </div>
+
+    <!-- 故事区 -->
+    <div id="storyDisplay" class="story-narrative">
+        <p>晨雾还挂在吊脚楼角，你推开竹窗，青榕寨在鸟鸣中醒来。</p>
+    </div>
+
+    <!-- 流式输出区 -->
+    <div id="streamingContent" class="streaming-content"></div>
+
+    <!-- 标签导航栏 -->
+    <div class="tab-nav">
+        <div class="tab-item active" data-tab="story">剧情</div>
+        <div class="tab-item" data-tab="relation">人脉</div>
+        <div class="tab-item" data-tab="network">关系网</div>
+        <div class="tab-item" data-tab="map">地图</div>
+        <div class="tab-item" data-tab="items">资产</div>
+        <div class="tab-item" data-tab="settings">设置</div>
+    </div>
+
+    <!-- 剧情面板 -->
+    <div id="storyPanel" class="content-panel">
+        <div id="storyContent">
+            <p>晨雾还挂在吊脚楼角，你推开竹窗，青榕寨在鸟鸣中醒来。阿妈在火塘边蒸糯米，香气混着柴烟钻进鼻腔。</p>
+            <p>你今年18岁了，山脚榕树下，年轻人们正在扎堆，似乎要比试芦笙。</p>
+        </div>
+    </div>
+
+    <!-- 人际关系面板 -->
+    <div id="relationPanel" class="content-panel panel-hidden">
+        <div class="character-grid" id="characterGrid"></div>
+        <div id="characterDetail" class="character-detail panel-hidden">
+            <div class="detail-row"><span class="detail-label">姓名</span><span class="detail-value" id="detailName">阿妈</span></div>
+            <div class="detail-row"><span class="detail-label">年龄</span><span class="detail-value" id="detailAge">45</span></div>
+            <div class="detail-row"><span class="detail-label">身份</span><span class="detail-value" id="detailRole">母亲</span></div>
+            <div class="detail-row"><span class="detail-label">性格</span><span class="detail-value" id="detailPersonality">慈祥温和</span></div>
+            <div class="detail-row"><span class="detail-label">外貌</span><span class="detail-value" id="detailAppearance">头发花白，面容和善</span></div>
+            <div class="detail-row"><span class="detail-label">当前关系</span><span class="detail-value" id="detailRelationStage">挚友</span></div>
+            <div class="detail-row"><span class="detail-label">好感度</span><span class="detail-value" id="detailFavor">80</span></div>
+            <div class="detail-row"><span class="detail-label">好感阶段</span><span class="detail-value" id="detailFavorStage">挚友</span></div>
+            <div class="detail-row"><span class="detail-label">爱慕值</span><span class="detail-value" id="detailLove">0</span></div>
+            <div class="detail-row"><span class="detail-label">爱慕阶段</span><span class="detail-value" id="detailLoveStage">陌生</span></div>
+            <div class="detail-row"><span class="detail-label">当前状态</span><span class="detail-value" id="detailStatus">健康</span></div>
+            <div class="detail-desc" id="detailDesc">你的母亲，从小把你抚养长大，精通染布和刺绣。</div>
+            <div style="display:flex; gap:5px; margin-top:8px; flex-wrap:wrap;">
+                <button class="choice-btn" style="flex:1;" id="talkBtn">聊天</button>
+                <button class="choice-btn" style="flex:1;" id="giftBtn">送礼</button>
+                <button class="choice-btn" style="flex:1;" id="inviteBtn">邀请</button>
+                <button class="choice-btn" style="flex:1;" id="confessBtn">表白</button>
+                <button class="choice-btn" style="flex:1;" id="divorceBtn" style="display:none;">离婚</button>
+                <button class="choice-btn" style="flex:1;" id="backFromChatBtn" style="display:none;">返回</button>
+            </div>
+            
+            <!-- 离婚面板 -->
+            <div id="divorcePanel" class="divorce-panel" style="display:none;">
+                <div class="warning-text">⚠️ 确定要离婚吗？这可能影响你们的关系</div>
+                <div style="display:flex; gap:5px;">
+                    <button class="choice-btn" style="flex:1;" id="confirmDivorceBtn">确认离婚</button>
+                    <button class="choice-btn" style="flex:1;" id="cancelDivorceBtn">取消</button>
+                </div>
+            </div>
+            
+            <!-- 邀请面板 -->
+            <div id="invitePanel" class="invite-panel" style="display:none;">
+                <div class="invite-counter">本回合剩余邀请次数: <span id="inviteCount">2</span>/2</div>
+                <div class="location-options" id="locationOptions"></div>
+                <button class="choice-btn" id="confirmInviteBtn" style="width:100%; margin-top:5px;">确认邀请</button>
+            </div>
+            
+            <!-- 聊天界面 -->
+            <div id="chatInterface" class="chat-interface" style="display:none;">
+                <div class="chat-header">
+                    <div class="chat-avatar" id="chatAvatar">👤</div>
+                    <div class="chat-title">
+                        <div class="chat-name" id="chatName">阿妈</div>
+                        <div class="chat-status" id="chatStatus">在线 · 好感80</div>
+                    </div>
+                </div>
+                <div id="chatMessages" class="chat-messages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="输入消息...">
+                    <button id="sendChatBtn" class="chat-send">发送</button>
+                </div>
+                
+                <!-- 送礼背包面板 -->
+                <div id="giftBackpack" class="backpack-panel" style="display:none;">
+                    <div class="backpack-header">
+                        <span>🎒 背包物品</span>
+                        <span id="backpackCount">0/50</span>
+                    </div>
+                    <div id="backpackItems" class="backpack-items"></div>
+                    <div id="emptyBackpackMsg" class="empty-backpack" style="display:none;">⚠️ 您背包里没有物品</div>
+                    <button id="confirmGiftBtn" class="choice-btn" style="width:100%; margin-top:10px;">确认送礼</button>
+                </div>
+            </div>
+        </div>
+    </div><!-- 关系网面板 -->
+    <div id="networkPanel" class="content-panel panel-hidden">
+        <div class="relation-network">
+            <canvas id="networkCanvas" width="450" height="300"></canvas>
+        </div>
+        <div style="margin-top:10px; font-size:0.8rem; color:#e5ca92;">
+            <span>🔴 你</span> 
+            <span style="margin-left:10px;">🟢 NPC</span> 
+            <span style="margin-left:10px;">📏 粗线：亲密关系</span>
+            <span style="margin-left:10px;">虚线：NPC之间关系</span>
+        </div>
+    </div>
+
+    <!-- 地图面板 -->
+    <div id="mapPanel" class="content-panel panel-hidden">
+        <div class="map-grid" id="mapGrid"></div>
+        <div class="map-legend">
+            <span>🟩 未探索</span>
+            <span>🟨 已探索</span>
+            <span>✨ 可触发事件</span>
+            <span>🌸 春季限定</span>
+            <span>☀️ 夏季限定</span>
+            <span>🍁 秋季限定</span>
+            <span>❄️ 冬季限定</span>
+            <span>🔄 AI随机生成</span>
+        </div>
+        <div id="mapEventContainer" style="margin-top:10px;"></div>
+        <div style="margin-top:8px; font-size:0.85rem; color:#f8d58c; line-height:1.5;" id="mapMessage"></div>
+    </div>
+
+    <!-- 资产面板 -->
+    <div id="itemsPanel" class="content-panel panel-hidden">
+        <div class="items-grid" id="itemsGrid"></div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div id="settingsPanel" class="content-panel panel-hidden">
+        <div class="settings-group">
+            <div class="settings-label">主角姓名</div>
+            <input type="text" id="playerName" class="settings-input" value="阿苗" placeholder="输入你的名字">
+        </div>
+        <div class="settings-group">
+            <div class="settings-label">AI模式</div>
+            <select id="apiMode" class="settings-select">
+                <option value="local">本地模式（模拟AI）</option>
+                <option value="deepseek">DeepSeek API</option>
+                <option value="claude">Claude API</option>
+                <option value="gemini">Gemini API</option>
+                <option value="custom">自定义API</option>
+            </select>
+        </div>
+        <div class="settings-group" id="apiKeyGroup" style="display:none;">
+            <div class="settings-label">API Key</div>
+            <input type="password" id="apiKey" class="settings-input" placeholder="输入你的API Key">
+        </div>
+        <div class="settings-group" id="apiUrlGroup" style="display:none;">
+            <div class="settings-label">API 地址</div>
+            <input type="text" id="apiUrl" class="settings-input" value="https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent">
+        </div>
+        <div class="settings-group" id="modelSelectGroup" style="display:none;">
+            <div class="settings-label">选择模型</div>
+            <div class="model-selector">
+                <select id="modelSelect">
+                    <option value="">请先获取模型列表</option>
+                </select>
+                <button id="refreshModels" class="refresh-models">🔄 获取</button>
+            </div>
+        </div>
+        <div class="settings-group">
+            <div class="settings-label">AI温度</div>
+            <select id="aiTemperature" class="settings-select">
+                <option value="0.7">平衡 (0.7)</option>
+                <option value="0.9">创意 (0.9)</option>
+                <option value="1.0">天马行空 (1.0)</option>
+                <option value="0.5">稳定 (0.5)</option>
+            </select>
+        </div>
+        <div class="settings-group">
+            <div class="settings-label">流式输出</div>
+            <select id="streamingMode" class="settings-select">
+                <option value="true">开启 (实时生成)</option>
+                <option value="false">关闭 (一次性显示)</option>
+            </select>
+        </div>
+        <div class="settings-group">
+            <div class="settings-label">自动存档</div>
+            <select id="autoSaveMode" class="settings-select">
+                <option value="true">开启 (退出时自动保存)</option>
+                <option value="false">关闭</option>
+            </select>
+        </div>
+        <div class="settings-group">
+            <div class="settings-label">世界观设定</div>
+            <textarea id="worldSetting" class="settings-textarea">古代苗疆，少女成长，部落寨子，自然崇拜，四季分明，有苗年、花山节、赶秋节等传统节日。随着剧情发展会结识新的NPC。</textarea>
+        </div>
+        <button id="saveSettings" class="settings-save">保存设置</button>
+    </div>
+
+    <!-- 随机NPC事件区域 -->
+    <div id="randomNPCContainer" style="margin:8px 0;"></div>
+
+    <!-- 节日事件区域 -->
+    <div id="festivalContainer" style="margin:8px 0;"></div>
+
+    <!-- 吃醋事件区域 -->
+    <div id="jealousyContainer" style="margin:8px 0;"></div>
+
+    <!-- API 指示器 -->
+    <div class="api-indicator" id="apiIndicator">
+        <span id="apiMessage">⏳ 等待指令</span>
+        <span id="apiSpinner" class="spinner" style="display: none;"></span>
+    </div>
+
+    <!-- 选项按钮 -->
+    <div id="choiceButtons" class="choice-buttons">
+        <button class="choice-btn">🌽 赶场</button>
+        <button class="choice-btn">🎵 芦笙</button>
+        <button class="choice-btn">🛏️ 帮阿妈</button>
+    </div>
+
+    <!-- 自由输入 -->
+    <div class="free-input-area">
+        <input type="text" id="freeActionInput" placeholder="✍️ 输入你想做的事...">
+        <button id="submitFreeAction" class="free-submit">召唤AI</button>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer-bar">
+        <a href="#" id="backToEntryBtn" class="back-to-entry">⏮ 返回入口</a>
+        <button id="restartGameBtn" class="restart-story">🔄 重开</button>
+        <button id="nextTurnBtn" class="next-turn-btn">⏭️ 下一回合</button>
+        <span class="hint-message" id="gameHint">苗疆深处</span>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ==================== 元素获取函数 ====================
+        function getElement(id) {
+            return document.getElementById(id);
+        }
+
+        function showNotification(message) {
+            const notif = document.createElement('div');
+            notif.className = 'save-notification';
+            notif.innerText = message;
+            document.body.appendChild(notif);
+            setTimeout(() => {
+                notif.remove();
+            }, 3000);
+        }
+
+        // ==================== 元素获取 ====================
+        const entryPortal = getElement('entryPortal');
+        const gameMain = getElement('gameMain');
+        const enterLink = getElement('enterGameLink');
+        const backBtn = getElement('backToEntryBtn');
+        const restartBtn = getElement('restartGameBtn');
+        const nextTurnBtn = getElement('nextTurnBtn');
+        const saveBtn = getElement('saveBtn');
+
+        const storyDisplay = getElement('storyDisplay');
+        const storyContent = getElement('storyContent');
+        const streamingContent = getElement('streamingContent');
+        const choiceButtonsDiv = getElement('choiceButtons');
+        const apiMessageSpan = getElement('apiMessage');
+        const apiSpinner = getElement('apiSpinner');
+        const gameHint = getElement('gameHint');
+        const freeInput = getElement('freeActionInput');
+        const freeSubmit = getElement('submitFreeAction');
+        const apiModeBadge = getElement('apiModeBadge');
+        const playerNameDisplay = getElement('playerNameDisplay');
+        const playerAge = getElement('playerAge');
+        const playerTags = getElement('playerTags');
+
+        // 属性显示
+        const statCha = getElement('statCha');
+        const statWis = getElement('statWis');
+        const statPhys = getElement('statPhys');
+        const statArt = getElement('statArt');
+        const statHp = getElement('statHp');
+        const statMind = getElement('statMind');
+        const statMoney = getElement('statMoney');
+        const weekDisplay = getElement('weekDisplay');
+        const locationDisplay = getElement('locationDisplay');
+
+        // 标签导航
+        const tabItems = document.querySelectorAll('.tab-item');
+        const storyPanel = getElement('storyPanel');
+        const relationPanel = getElement('relationPanel');
+        const networkPanel = getElement('networkPanel');
+        const mapPanel = getElement('mapPanel');
+        const itemsPanel = getElement('itemsPanel');
+        const settingsPanel = getElement('settingsPanel');
+        const networkCanvas = getElement('networkCanvas');
+
+        // 人际关系元素
+        const characterGrid = getElement('characterGrid');
+        const characterDetail = getElement('characterDetail');
+        const detailName = getElement('detailName');
+        const detailAge = getElement('detailAge');
+        const detailRole = getElement('detailRole');
+        const detailPersonality = getElement('detailPersonality');
+        const detailAppearance = getElement('detailAppearance');
+        const detailRelationStage = getElement('detailRelationStage');
+        const detailFavor = getElement('detailFavor');
+        const detailFavorStage = getElement('detailFavorStage');
+        const detailLove = getElement('detailLove');
+        const detailLoveStage = getElement('detailLoveStage');
+        const detailStatus = getElement('detailStatus');
+        const detailDesc = getElement('detailDesc');
+        const talkBtn = getElement('talkBtn');
+        const giftBtn = getElement('giftBtn');
+        const inviteBtn = getElement('inviteBtn');
+        const confessBtn = getElement('confessBtn');
+        const divorceBtn = getElement('divorceBtn');
+        const backFromChatBtn = getElement('backFromChatBtn');
+        
+        // 离婚面板
+        const divorcePanel = getElement('divorcePanel');
+        const confirmDivorceBtn = getElement('confirmDivorceBtn');
+        const cancelDivorceBtn = getElement('cancelDivorceBtn');
+
+        // 邀请面板
+        const invitePanel = getElement('invitePanel');
+        const inviteCount = getElement('inviteCount');
+        const locationOptions = getElement('locationOptions');
+        const confirmInviteBtn = getElement('confirmInviteBtn');
+
+        // 聊天界面元素
+        const chatInterface = getElement('chatInterface');
+        const chatMessages = getElement('chatMessages');
+        const chatInput = getElement('chatInput');
+        const sendChatBtn = getElement('sendChatBtn');
+        const chatAvatar = getElement('chatAvatar');
+        const chatName = getElement('chatName');
+        const chatStatus = getElement('chatStatus');
+        const giftBackpack = getElement('giftBackpack');
+        const backpackItems = getElement('backpackItems');
+        const backpackCount = getElement('backpackCount');
+        const emptyBackpackMsg = getElement('emptyBackpackMsg');
+        const confirmGiftBtn = getElement('confirmGiftBtn');
+
+        // 地图元素
+        const mapGrid = getElement('mapGrid');
+        const mapEventContainer = getElement('mapEventContainer');
+        const mapMessage = getElement('mapMessage');
+
+        // 物品元素
+        const itemsGrid = getElement('itemsGrid');
+
+        // 随机事件容器
+        const randomNPCContainer = getElement('randomNPCContainer');
+        const festivalContainer = getElement('festivalContainer');
+        const jealousyContainer = getElement('jealousyContainer');
+
+        // 设置元素
+        const playerName = getElement('playerName');
+        const apiMode = getElement('apiMode');
+        const apiKey = getElement('apiKey');
+        const apiUrl = getElement('apiUrl');
+        const apiKeyGroup = getElement('apiKeyGroup');
+        const apiUrlGroup = getElement('apiUrlGroup');
+        const modelSelectGroup = getElement('modelSelectGroup');
+        const modelSelect = getElement('modelSelect');
+        const refreshModels = getElement('refreshModels');
+        const aiTemperature = getElement('aiTemperature');
+        const streamingMode = getElement('streamingMode');
+        const autoSaveMode = getElement('autoSaveMode');
+        const worldSetting = getElement('worldSetting');
+        const saveSettings = getElement('saveSettings');
+
+        // ==================== 属性标签配置 ====================
+        const TRAITS = [
+            { name: '明眸皓齿', effect: { cha: 5 }, desc: '初始魅力+5' },
+            { name: '冰肌玉骨', effect: { cha: 10 }, desc: '初始魅力+10' },
+            { name: '貌若无盐', effect: { cha: -10 }, desc: '初始魅力-10' },
+            { name: '多智近妖', effect: { wis: 15, wisGrowth: 1.1 }, desc: '智慧+15，获取经验+10%' },
+            { name: '天资愚钝', effect: { wis: -10, wisGrowth: 0.9 }, desc: '智慧-10，获取经验-10%' },
+            { name: '天生病弱', effect: { phys: -10, hp: -10, physGrowth: 0.9 }, desc: '体魄-10，生命-10，获取经验-10%' },
+            { name: '多才多艺', effect: { art: 10 }, desc: '初始才艺+10' },
+            { name: '体魄强健', effect: { phys: 10, hp: 10 }, desc: '体魄+10，生命+10' },
+            { name: '才疏学浅', effect: { art: -10 }, desc: '初始才艺-10' }
+        ];
+
+        // ==================== 好感/爱慕阶段判断函数 ====================
+        function getFavorStage(favor) {
+            if (favor >= 81) return { name: '挚友', class: 'stage-close' };
+            if (favor >= 61) return { name: '朋友', class: 'stage-friend' };
+            if (favor >= 31) return { name: '熟悉', class: 'stage-familiar' };
+            if (favor >= 11) return { name: '陌生', class: 'stage-stranger' };
+            return { name: '敌视', class: 'stage-hostile' };
+        }
+
+        function getLoveStage(love) {
+            if (love >= 81) return { name: '挚爱', class: 'love-forever' };
+            if (love >= 61) return { name: '恋爱', class: 'love-dating' };
+            if (love >= 31) return { name: '暧昧', class: 'love-crush' };
+            if (love >= 11) return { name: '陌生', class: 'love-stranger' };
+            return { name: '憎恨', class: 'love-hate' };
+        }
+
+        function getRelationBetween(favor, love, canLove, relationship = 'none') {
+            if (relationship === 'married') return '夫妻';
+            if (relationship === 'dating') return '恋人';
+            if (!canLove) return getFavorStage(favor).name;
+            if (love >= 81) return '挚爱';
+            if (love >= 61) return '恋人';
+            if (love >= 31) return '暧昧对象';
+            if (favor >= 81) return '挚友';
+            if (favor >= 61) return '朋友';
+            if (favor >= 31) return '熟人';
+            if (favor >= 11) return '陌生人';
+            return '关系紧张';
+        }
+
+        // ==================== 存档功能 ====================
+        function saveGame() {
+            try {
+                const saveData = {
+                    currentState: currentState,
+                    timestamp: new Date().toLocaleString()
+                };
+                localStorage.setItem('miaojiangSave', JSON.stringify(saveData));
+                showNotification('✅ 游戏已自动保存');
+                return true;
+            } catch (e) {
+                console.error('保存失败:', e);
+                showNotification('❌ 保存失败');
+                return false;
+            }
+        }
+
+        function loadGame() {
+            try {
+                const saved = localStorage.getItem('miaojiangSave');
+                if (saved) {
+                    const saveData = JSON.parse(saved);
+                    if (saveData.currentState) {
+                        currentState = saveData.currentState;
+                        showNotification('📂 加载上次存档');
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.error('加载失败:', e);
+            }
+            return false;
+        }
+
+        // ==================== 退出时自动存档 ====================
+        window.addEventListener('beforeunload', function() {
+            if (autoSaveMode && autoSaveMode.value === 'true') {
+                saveGame();
+            }
+        });// ==================== 节日系统 ====================
+const FESTIVALS = [
+    {
+        name: '苗年',
+        month: 12,
+        week: 2,
+        description: '苗族最隆重的传统节日，是辞旧迎新、庆祝丰收、祭祀祖先的日子。',
+        activities: [
+            '祭祖与团圆饭：家家户户准备糯米饭、酸汤鱼、腊肉等祭品祭祖，全家团聚吃年夜饭。',
+            '长桌宴：长长的桌子从寨子这头摆到那头，几十甚至上百人共享美食。',
+            '芦笙舞与对歌：男女老少穿上盛装，在芦笙伴奏下跳舞，青年男女通过对歌表达爱意。',
+            '斗牛、斗鸡：传统比赛，以赛会友。'
+        ],
+        effects: (state) => {
+            Object.keys(state.characters).forEach(name => {
+                state.characters[name].favor = Math.min(100, (state.characters[name].favor || 0) + 5);
+            });
+            state.baseArt += 3;
+            state.mind = Math.min(100, (state.mind || 92) + 10);
+            return '🎉 苗年到了！全寨上下喜气洋洋，你的才艺提升了，精神焕发！';
+        }
+    },
+    {
+        name: '花山节',
+        month: 5,
+        week: 1,
+        description: '也叫“跳花坡”，是苗族青年男女的社交盛会，充满了浪漫气息。',
+        activities: [
+            '盛装对歌：青年男女通过对歌、交换信物来寻找心仪的对象。',
+            '爬花杆与斗牛：竞技活动，气氛热烈。'
+        ],
+        effects: (state) => {
+            Object.keys(state.characters).forEach(name => {
+                if (state.characters[name].canLove) {
+                    state.characters[name].favor = Math.min(100, (state.characters[name].favor || 0) + 8);
+                }
+            });
+            state.baseCha += 5;
+            return '🌸 花山节到了！青年男女盛装对歌，你的魅力提升了！';
+        }
+    },
+    {
+        name: '赶秋节',
+        month: 8,
+        week: 3,
+        description: '苗族为青年男女而设的节日，青年男女聚集在山场上唱歌跳舞。',
+        activities: [
+            '山场对歌：青年男女聚集在山场上唱歌跳舞。',
+            '交换信物：互赠礼物表达心意。'
+        ],
+        effects: (state) => {
+            Object.keys(state.characters).forEach(name => {
+                if (state.characters[name].canLove) {
+                    state.characters[name].love = Math.min(100, (state.characters[name].love || 0) + 5);
+                }
+            });
+            state.baseCha += 3;
+            return '🍁 赶秋节到了！山场上歌声悠扬，你的魅力提升了！';
+        }
+    }
+];
+
+// ==================== 随机NPC生成和结识系统 ====================
+const RANDOM_NPC_NAMES = [
+    '阿牛', '阿花', '阿贵', '阿莲', '阿成', '阿月', '阿山', '阿水',
+    '外来商人', '游方歌手', '邻寨青年', '采药老人', '打铁匠', '卖货郎',
+    '绣娘阿香', '猎户阿虎', '渔夫阿青', '木匠阿福', '巫医阿婆'
+];
+
+const RANDOM_NPC_PERSONALITIES = [
+    '热情开朗', '沉默寡言', '幽默风趣', '温柔体贴', '直率豪爽', '心思细腻'
+];
+
+// 结识的NPC列表（动态添加）
+let metNPCs = [];
+
+function generateRandomNPC() {
+    if (Math.random() > 0.25) return; // 25%概率触发
+    
+    const npcName = RANDOM_NPC_NAMES[Math.floor(Math.random() * RANDOM_NPC_NAMES.length)];
+    const personality = RANDOM_NPC_PERSONALITIES[Math.floor(Math.random() * RANDOM_NPC_PERSONALITIES.length)];
+    
+    // 检查是否已经结识过
+    if (currentState.characters[npcName]) return;
+    
+    const event = RANDOM_NPC_EVENTS[Math.floor(Math.random() * RANDOM_NPC_EVENTS.length)];
+    
+    if (randomNPCContainer) {
+        randomNPCContainer.innerHTML = `
+            <div class="random-npc">
+                <p>👤 你遇到了 ${npcName}</p>
+                <p>${event.desc}</p>
+                <div style="display:flex; gap:5px; margin-top:8px;">
+                    ${event.choices.map(choice => 
+                        `<button class="choice-btn" style="flex:1;" onclick="handleRandomNPCEvent('${choice}', '${npcName}', '${personality}')">${choice}</button>`
+                    ).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    window.currentRandomEvent = { npcName, personality, event };
+}
+
+// ==================== 处理随机NPC事件并自动添加到人脉 ====================
+window.handleRandomNPCEvent = function(choice, npcName, personality) {
+    if (!window.currentRandomEvent) return;
+    
+    const result = window.currentRandomEvent.event.effects(currentState, choice);
+    
+    // 如果选择了好感选项，自动结识该NPC
+    if (choice === '帮他找妈妈' || choice === '亲自带路' || choice === '劝架' || choice === '帮忙') {
+        if (!currentState.characters[npcName]) {
+            // 随机生成NPC年龄和属性
+            const age = Math.floor(Math.random() * 40) + 15;
+            const canLove = Math.random() > 0.5;
+            const favor = Math.floor(Math.random() * 30) + 20;
+            
+            currentState.characters[npcName] = {
+                age: age,
+                role: '路人',
+                personality: personality,
+                appearance: '初次相遇，印象深刻',
+                desc: `在苗寨中遇到的${personality}的${npcName}`,
+                favor: favor,
+                love: 0,
+                status: '健康',
+                canLove: canLove,
+                relationship: 'none',
+                lifespan: Math.floor(Math.random() * 30) + 60,
+                met: true
+            };
+            
+            result += ` 你结识了${npcName}，他/她被添加到人脉中。`;
+            
+            // 触发结识事件
+            if (storyDisplay) {
+                storyDisplay.innerHTML += `<p>✨ 新朋友：${npcName}加入了你的社交圈！</p>`;
+            }
+        }
+    }
+    
+    if (randomNPCContainer) {
+        randomNPCContainer.innerHTML = `
+            <div class="random-npc">
+                <p>${result}</p>
+            </div>
+        `;
+        setTimeout(() => {
+            randomNPCContainer.innerHTML = '';
+        }, 5000);
+    }
+    if (storyDisplay) {
+        storyDisplay.innerHTML = `<p>${result}</p>`;
+    }
+    window.currentRandomEvent = null;
+    refreshUI();
+};
+
+const RANDOM_NPC_EVENTS = [
+    {
+        desc: '一个迷路的小孩在路边哭泣，看起来很可怜。',
+        choices: ['帮他找妈妈', '给他一块糯米糕', '离开'],
+        effects: (state, choice) => {
+            if (choice === '帮他找妈妈') {
+                state.mind += 5;
+                return '你花了一个时辰帮小孩找到妈妈，她感激地送你一些草药。';
+            } else if (choice === '给他一块糯米糕') {
+                if (state.items.ricecake > 0) {
+                    state.items.ricecake--;
+                    state.mind += 3;
+                    return '小孩吃了糯米糕，破涕为笑，自己跑去找妈妈了。';
+                }
+                return '你没有糯米糕可以给他。';
+            }
+            return '你离开了。';
+        }
+    },
+    {
+        desc: '一个外乡人向你问路，想去集市。',
+        choices: ['亲自带路', '指路', '不理他'],
+        effects: (state, choice) => {
+            if (choice === '亲自带路') {
+                state.money += 5;
+                return '你带外乡人去了集市，他感激地给了你几个贝币。';
+            } else if (choice === '指路') {
+                state.baseWis += 1;
+                return '你给他指了路，他道谢后离开了。';
+            }
+            return '你假装没听见。';
+        }
+    },
+    {
+        desc: '你看到两个小孩在打架，其中一个快哭了。',
+        choices: ['劝架', '找大人来', '旁观'],
+        effects: (state, choice) => {
+            if (choice === '劝架') {
+                state.baseWis += 2;
+                return '你分开两个小孩，讲了道理，他们握手言和。';
+            } else if (choice === '找大人来') {
+                return '你找来他们的父母，小孩被带回家了。';
+            }
+            return '你看了一会儿，觉得无聊就走了。';
+        }
+    },
+    {
+        desc: '一位老人摔倒在路边，看起来需要帮助。',
+        choices: ['扶他起来', '帮忙叫人来', '离开'],
+        effects: (state, choice) => {
+            if (choice === '扶他起来') {
+                state.mind += 8;
+                state.items.herb = (state.items.herb || 0) + 2;
+                return '你扶起老人，他感激地送了你一些草药。';
+            } else if (choice === '帮忙叫人来') {
+                return '你叫来几个年轻人，一起把老人送回了家。';
+            }
+            return '你犹豫了一下，还是离开了。';
+        }
+    }
+];
+
+// ==================== 吃醋系统 ====================
+function checkJealousy() {
+    const lovableChars = Object.keys(currentState.characters).filter(name => 
+        currentState.characters[name].canLove && 
+        currentState.characters[name].love >= 50 &&
+        currentState.characters[name].status === '健康'
+    );
+    
+    if (lovableChars.length >= 2 && Math.random() < 0.3) { // 30%概率触发吃醋
+        const jealous = lovableChars[Math.floor(Math.random() * lovableChars.length)];
+        const target = lovableChars.filter(n => n !== jealous)[Math.floor(Math.random() * (lovableChars.length - 1))];
+        
+        const jealousChar = currentState.characters[jealous];
+        const targetChar = currentState.characters[target];
+        
+        let eventDesc = '';
+        
+        if (jealousChar.relationship === 'married' || jealousChar.relationship === 'dating') {
+            // 吃醋事件
+            jealousChar.favor = Math.max(0, jealousChar.favor - 10);
+            jealousChar.love = Math.max(0, jealousChar.love - 5);
+            
+            eventDesc = `💔 ${jealous}看到你和${target}走得很近，心里很不舒服。好感度下降了。`;
+            
+            if (Math.random() < 0.5) {
+                // 冲突事件
+                targetChar.favor = Math.max(0, targetChar.favor - 5);
+                eventDesc += ` ${jealous}和${target}发生了争执。`;
+            }
+        }
+        
+        if (jealousyContainer && eventDesc) {
+            jealousyContainer.innerHTML = `
+                <div class="jealousy-event">
+                    <p>${eventDesc}</p>
+                </div>
+            `;
+            setTimeout(() => {
+                jealousyContainer.innerHTML = '';
+            }, 5000);
+        }
+    }
+}
+
+// ==================== NPC之间的关系演化 ====================
+function evolveNPCRelationships() {
+    // NPC之间随机互动，可能成为朋友或敌人
+    const npcs = Object.keys(currentState.characters).filter(name => name !== '你');
+    
+    for (let i = 0; i < npcs.length; i++) {
+        for (let j = i + 1; j < npcs.length; j++) {
+            if (Math.random() < 0.05) { // 5%概率发生互动
+                const npc1 = npcs[i];
+                const npc2 = npcs[j];
+                
+                const relationChange = Math.random() > 0.5 ? 3 : -2;
+                
+                // 更新NPC之间的关系
+                if (!currentState.npcRelations) {
+                    currentState.npcRelations = {};
+                }
+                if (!currentState.npcRelations[npc1]) {
+                    currentState.npcRelations[npc1] = {};
+                }
+                if (!currentState.npcRelations[npc2]) {
+                    currentState.npcRelations[npc2] = {};
+                }
+                
+                currentState.npcRelations[npc1][npc2] = (currentState.npcRelations[npc1][npc2] || 0) + relationChange;
+                currentState.npcRelations[npc2][npc1] = (currentState.npcRelations[npc2][npc1] || 0) + relationChange;
+                
+                // 如果关系变差到一定程度，可能变成敌人
+                if (currentState.npcRelations[npc1][npc2] <= -30) {
+                    if (storyDisplay) {
+                        storyDisplay.innerHTML += `<p>⚔️ ${npc1}和${npc2}的关系恶化了，他们现在互相敌视。</p>`;
+                    }
+                }
+                
+                // 如果关系变好，可能变成朋友
+                if (currentState.npcRelations[npc1][npc2] >= 50) {
+                    if (storyDisplay) {
+                        storyDisplay.innerHTML += `<p>🤝 ${npc1}和${npc2}成为了好朋友。</p>`;
+                    }
+                }
+            }
+        }
+    }
+  }// ==================== 离婚系统 ====================
+function showDivorcePanel() {
+    if (!selectedCharacter) return;
+    const char = currentState.characters[selectedCharacter];
+    
+    if (char.relationship !== 'married') {
+        alert('你们不是夫妻关系');
+        return;
+    }
+    
+    if (divorcePanel) {
+        divorcePanel.style.display = 'block';
+    }
+    if (talkBtn) talkBtn.style.display = 'none';
+    if (giftBtn) giftBtn.style.display = 'none';
+    if (inviteBtn) inviteBtn.style.display = 'none';
+    if (confessBtn) confessBtn.style.display = 'none';
+    if (divorceBtn) divorceBtn.style.display = 'none';
+}
+
+function hideDivorcePanel() {
+    if (divorcePanel) {
+        divorcePanel.style.display = 'none';
+    }
+    if (selectedCharacter) {
+        selectCharacter(selectedCharacter);
+    }
+}
+
+function confirmDivorce() {
+    if (!selectedCharacter) return;
+    
+    const char = currentState.characters[selectedCharacter];
+    
+    // 对方主动提出离婚的概率
+    const主动离婚 = Math.random() < 0.2;
+    
+    if (主动离婚) {
+        // 对方先提出离婚
+        if (storyDisplay) {
+            storyDisplay.innerHTML = `<p>😢 ${selectedCharacter}提出了离婚...你们的关系结束了。</p>`;
+        }
+        char.relationship = 'none';
+        char.favor = Math.max(0, char.favor - 30);
+        char.love = 0;
+        hideDivorcePanel();
+        refreshUI();
+        return;
+    }
+    
+    // 根据好感度决定离婚成功率
+    let successRate = 100;
+    if (char.favor >= 80 && char.love >= 60) {
+        successRate = 40; // 高好感时40%不同意
+    } else if (char.favor >= 50) {
+        successRate = 70;
+    } else {
+        successRate = 100;
+    }
+    
+    const success = Math.random() * 100 < successRate;
+    
+    if (success) {
+        // 离婚成功
+        if (storyDisplay) {
+            storyDisplay.innerHTML = `<p>⚖️ 你和${selectedCharacter}离婚了。</p>`;
+        }
+        char.relationship = 'none';
+        char.favor = Math.max(0, char.favor - 20);
+        char.love = 0;
+    } else {
+        // 对方不同意离婚
+        if (storyDisplay) {
+            storyDisplay.innerHTML = `<p>💔 ${selectedCharacter}不同意离婚，你们需要再考虑考虑。</p>`;
+        }
+        char.favor = Math.max(0, char.favor - 5);
+    }
+    
+    hideDivorcePanel();
+    refreshUI();
+}
+
+// ==================== AI随机生成地图 ====================
+const MAP_TYPES = [
+    '青榕寨', '溪边', '竹林', '药田', '集市', '祠堂', 
+    '山脚', '梯田', '枫树林', '后山', '瀑布', '山洞',
+    '花坡', '石林', '茶园', '蜂场', '染坊', '银铺'
+];
+
+const MAP_DESC = {
+    '青榕寨': '寨子中心，热闹非凡',
+    '溪边': '清澈的溪水流过，女子们在此洗衣',
+    '竹林': '翠竹成林，四季景色各异',
+    '药田': '阿婆的草药田，弥漫着药香',
+    '集市': '交易物品的地方',
+    '祠堂': '供奉祖先的地方，庄严肃穆',
+    '山脚': '通往深山的入口',
+    '梯田': '层层梯田，稻谷飘香',
+    '枫树林': '秋天枫叶似火',
+    '后山': '寨子后面的山，常有野兽出没',
+    '瀑布': '飞流直下的瀑布，水雾弥漫',
+    '山洞': '神秘的山洞，据说有宝藏',
+    '花坡': '开满野花的山坡，景色优美',
+    '石林': '奇特的石林地貌，容易迷路',
+    '茶园': '层层叠叠的茶园，茶香四溢',
+    '蜂场': '养蜂的地方，蜂蜜香甜',
+    '染坊': '染布的地方，蓝靛飘香',
+    '银铺': '打造银饰的地方，叮当作响'
+};
+
+const MAP_DANGER = {
+    '低': ['青榕寨', '溪边', '药田', '集市', '祠堂', '茶园', '染坊', '银铺'],
+    '中': ['竹林', '山脚', '梯田', '枫树林', '花坡', '蜂场'],
+    '高': ['后山', '瀑布', '山洞', '石林']
+};
+
+function generateRandomMap() {
+    // 随机选择9个不重复的地点
+    const shuffled = [...MAP_TYPES].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 9);
+    
+    const mapCells = [];
+    
+    for (let i = 0; i < 9; i++) {
+        const type = selected[i];
+        let danger = '低';
+        
+        // 根据地点类型设置危险等级
+        for (let [level, locations] of Object.entries(MAP_DANGER)) {
+            if (locations.includes(type)) {
+                danger = level;
+                break;
+            }
+        }
+        
+        mapCells.push({
+            id: i,
+            name: type,
+            desc: MAP_DESC[type] || '未知地点',
+            explored: false,
+            danger: danger,
+            eventTriggered: false
+        });
+    }
+    
+    return mapCells;
+}
+
+// ==================== 季节系统 ====================
+const SEASONS = ['春一月', '春二月', '春三月', '夏一月', '夏二月', '夏三月', '秋一月', '秋二月', '秋三月', '冬一月', '冬二月', '冬三月'];
+
+function getSeasonFromWeek(week) {
+    const index = (week - 1) % 12;
+    return SEASONS[index];
+}
+
+function getSeasonType(week) {
+    const index = (week - 1) % 12;
+    if (index < 3) return 'spring';
+    if (index < 6) return 'summer';
+    if (index < 9) return 'autumn';
+    return 'winter';
+}
+
+// ==================== 检查节日 ====================
+function checkFestival(week) {
+    const month = ((week - 1) % 12) + 1;
+    const weekInMonth = ((week - 1) % 3) + 1;
+    
+    for (let festival of FESTIVALS) {
+        if (festival.month === month && festival.week === weekInMonth) {
+            return festival;
+        }
+    }
+    return null;
+}
+
+// ==================== 触发节日事件 ====================
+function triggerFestival(festival) {
+    const result = festival.effects(currentState);
+    if (festivalContainer) {
+        festivalContainer.innerHTML = `
+            <div class="festival-event">
+                <h3 style="color:#1d2b35;">🎊 ${festival.name} 🎊</h3>
+                <p style="margin:5px 0;">${festival.description}</p>
+                <p style="margin:5px 0;">活动：${festival.activities.join(' · ')}</p>
+                <p style="margin:5px 0; font-weight:bold;">${result}</p>
+            </div>
+        `;
+        setTimeout(() => {
+            festivalContainer.innerHTML = '';
+        }, 10000);
+    }
+    if (storyDisplay) {
+        storyDisplay.innerHTML = `<p>${result}</p>`;
+    }
+}
+
+// ==================== 游戏状态 ====================
+let currentState = {
+    playerName: '阿苗',
+    playerAge: 18,
+    traitNames: [],
+    traitEffects: { cha: 0, wis: 0, phys: 0, art: 0, hp: 0, wisGrowth: 1.0, physGrowth: 1.0 },
+    week: 1,
+    location: '青榕寨',
+    baseCha: 50, baseWis: 50, basePhys: 50, baseArt: 50,
+    hp: 100, mind: 92,
+    money: 25,
+    mapCells: [],
+    mapEvents: {},
+    items: { 
+        ricecake: 0, 
+        thread: 0, 
+        silver: 0, 
+        herb: 0,
+        bamboo: 0,
+        cloth: 0
+    },
+    characters: {
+        '阿妈': { age: 45, role: '母亲', personality: '慈祥温和', appearance: '头发花白，面容和善', desc: '你的母亲，从小把你抚养长大。', favor: 80, love: 0, status: '健康', canLove: false, relationship: 'none', lifespan: 75 },
+        '彩': { age: 19, role: '好友', personality: '活泼开朗', appearance: '扎着双马尾，眼睛明亮', desc: '从小一起长大的玩伴。', favor: 50, love: 0, status: '健康', canLove: true, relationship: 'none', lifespan: 70 },
+        '寨公': { age: 52, role: '长老', personality: '威严公正', appearance: '花白胡须，目光深邃', desc: '寨子里的长老。', favor: 20, love: 0, status: '健康', canLove: false, relationship: 'none', lifespan: 80 },
+        '姜央': { age: 20, role: '寨主', personality: '勇敢果断', appearance: '身材挺拔，眼神坚毅', desc: '年轻的寨主。', favor: 20, love: 0, status: '健康', canLove: true, relationship: 'none', lifespan: 75 },
+        '阿婆': { age: 65, role: '草药师', personality: '慈祥睿智', appearance: '满头白发，眼神温和', desc: '最懂草药的人。', favor: 0, love: 0, status: '健康', canLove: false, relationship: 'none', lifespan: 85 }
+    },
+    npcRelations: {}, // 存储NPC之间的关系
+    settings: { 
+        apiMode: 'local', 
+        apiKey: '', 
+        apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', 
+        selectedModel: '', 
+        temperature: 0.7,
+        streaming: true,
+        autoSave: true,
+        worldSetting: '古代苗疆，少女成长，部落寨子，自然崇拜，四季分明，有苗年、花山节、赶秋节等传统节日。'
+    },
+    availableModels: [],
+    chatHistory: {},
+    storyContext: [],
+    turnActions: [],
+    inviteRemaining: 2
+};
+
+let isApiCalling = false;
+let selectedCharacter = null;
+let todayExplored = {};
+let inChatMode = false;
+let inInviteMode = false;
+let selectedGiftItem = null;
+let selectedInviteLocation = null;
+let currentMapEvent = null;
+let currentMapCellIndex = null;
+let abortController = null;
+let gameOver = false;
+
+// ==================== 计算最终属性 ====================
+function calculateStats() {
+    return {
+        cha: Math.min(100, Math.max(0, currentState.baseCha + (currentState.traitEffects.cha || 0))),
+        wis: Math.min(100, Math.max(0, currentState.baseWis + (currentState.traitEffects.wis || 0))),
+        phys: Math.min(100, Math.max(0, currentState.basePhys + (currentState.traitEffects.phys || 0))),
+        art: Math.min(100, Math.max(0, currentState.baseArt + (currentState.traitEffects.art || 0))),
+        hp: Math.min(100, Math.max(0, currentState.hp + (currentState.traitEffects.hp || 0)))
+    };
+}
+
+// ==================== 随机分配标签 ====================
+function assignRandomTraits() {
+    const numTraits = Math.floor(Math.random() * 3) + 1;
+    const shuffled = [...TRAITS].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, numTraits);
+    
+    let traitNames = [];
+    let traitEffects = { cha: 0, wis: 0, phys: 0, art: 0, hp: 0, wisGrowth: 1.0, physGrowth: 1.0 };
+
+    selected.forEach(trait => {
+        traitNames.push(trait.name);
+        if (trait.effect.cha) traitEffects.cha += trait.effect.cha;
+        if (trait.effect.wis) traitEffects.wis += trait.effect.wis;
+        if (trait.effect.phys) traitEffects.phys += trait.effect.phys;
+        if (trait.effect.art) traitEffects.art += trait.effect.art;
+        if (trait.effect.hp) traitEffects.hp += trait.effect.hp;
+        if (trait.effect.wisGrowth) traitEffects.wisGrowth = trait.effect.wisGrowth;
+        if (trait.effect.physGrowth) traitEffects.physGrowth = trait.effect.physGrowth;
+    });
+
+    return { traitNames, traitEffects };
+}
+
+// ==================== 年龄和死亡系统 ====================
+function updateAge() {
+    const years = Math.floor(currentState.week / 52);
+    currentState.playerAge = 18 + years;
+    
+    if (playerAge) {
+        playerAge.innerText = `${currentState.playerAge}岁`;
+    }
+    
+    // 检查主角死亡
+    if (currentState.playerAge >= 65) {
+        gameOver = true;
+        showDeathMessage('你度过了充实的一生，在65岁时安详离世。');
+        return;
+    }
+    
+    if (currentState.hp <= 0) {
+        gameOver = true;
+        showDeathMessage('你因伤势过重，离开了人世。');
+        return;
+    }
+    
+    // 检查NPC死亡
+    Object.keys(currentState.characters).forEach(name => {
+        const char = currentState.characters[name];
+        if (char.status === '已故') return;
+        
+        const npcAge = char.age + Math.floor(currentState.week / 52);
+        if (npcAge >= char.lifespan) {
+            char.status = '已故';
+            if (storyDisplay) {
+                storyDisplay.innerHTML += `<p>😢 ${name} 去世了...</p>`;
+            }
+        }
+    });
+}
+
+function showDeathMessage(message) {
+    if (storyDisplay) {
+        storyDisplay.innerHTML = `
+            <div class="death-message">
+                <h2>⚰️ 游戏结束 ⚰️</h2>
+                <p>${message}</p>
+                <p>你一共活了 ${currentState.playerAge} 岁</p>
+                <p>一生结识了 ${Object.keys(currentState.characters).length} 位朋友</p>
+                <button class="choice-btn" onclick="resetGame()">重新开始</button>
+            </div>
+        `;
+    }
+    document.querySelectorAll('.choice-btn, .free-submit, .next-turn-btn').forEach(btn => {
+        btn.classList.add('disabled');
+    });
+  }// ==================== 初始化地图（AI随机生成）====================
+        function initMap() {
+            currentState.mapCells = generateRandomMap();
+            currentState.mapEvents = {};
+            for (let i = 0; i < currentState.mapCells.length; i++) {
+                currentState.mapEvents[i] = false;
+            }
+            todayExplored = {};
+            if (mapGrid) renderMap();
+        }
+
+        // ==================== 渲染地图 ====================
+        function renderMap() {
+            if (!mapGrid) return;
+            const season = getSeasonType(currentState.week);
+            
+            mapGrid.innerHTML = '';
+            currentState.mapCells.forEach((cell, index) => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = `map-cell ${cell.explored ? 'explored' : ''} ${todayExplored[index] ? 'disabled' : ''} ${!currentState.mapEvents[index] && !cell.explored ? 'event-triggered' : ''} ${season}`;
+                cellDiv.innerText = cell.name;
+                cellDiv.dataset.index = index;
+                cellDiv.addEventListener('click', () => exploreMap(index));
+                mapGrid.appendChild(cellDiv);
+            });
+        }
+
+        // ==================== 探索地图 ====================
+        function exploreMap(index) {
+            if (isApiCalling || inChatMode || inInviteMode || gameOver) return;
+            if (todayExplored[index]) {
+                if (mapMessage) mapMessage.innerText = '⚠️ 这个地方本回合已经探索过了';
+                return;
+            }
+
+            const cell = currentState.mapCells[index];
+            todayExplored[index] = true;
+            currentState.turnActions.push(`探索${cell.name}`);
+            
+            // 根据危险等级决定事件
+            let exploreResult = `你探索了${cell.name}，${cell.desc}`;
+            
+            if (cell.danger === '高' && Math.random() < 0.4) {
+                // 高危险区域可能受伤
+                currentState.hp = Math.max(0, currentState.hp - 10);
+                exploreResult += '，不小心受伤了，生命-10。';
+            } else if (Math.random() > 0.5) {
+                const items = ['贝币', '草药', '竹笋', '布料'];
+                const found = items[Math.floor(Math.random() * items.length)];
+                if (found === '贝币') {
+                    currentState.money += 5;
+                    exploreResult += '，发现了5个贝币';
+                } else if (found === '草药') {
+                    currentState.items.herb = (currentState.items.herb || 0) + 1;
+                    exploreResult += '，采到了草药';
+                } else if (found === '竹笋') {
+                    currentState.items.bamboo = (currentState.items.bamboo || 0) + 1;
+                    exploreResult += '，发现了竹笋';
+                } else if (found === '布料') {
+                    currentState.items.cloth = (currentState.items.cloth || 0) + 1;
+                    exploreResult += '，捡到一块布料';
+                }
+            }
+            
+            cell.explored = true;
+            
+            if (mapMessage) mapMessage.innerText = exploreResult;
+            if (storyDisplay) {
+                storyDisplay.innerHTML = `<p>${exploreResult}</p>`;
+            }
+            
+            renderMap();
+            refreshUI();
+        }
+
+        // ==================== 渲染人际关系 ====================
+        function renderCharacters() {
+            if (!characterGrid) return;
+            characterGrid.innerHTML = '';
+            Object.keys(currentState.characters).forEach(name => {
+                const char = currentState.characters[name];
+                if (char.status === '已故') {
+                    // 显示已故NPC但置灰
+                    const card = document.createElement('div');
+                    card.className = 'character-card dead';
+                    card.innerHTML = `
+                        <div class="character-name">${name} 💀</div>
+                        <div class="character-relation">${char.role}</div>
+                        <div class="character-relation-badge">已故</div>
+                    `;
+                    characterGrid.appendChild(card);
+                    return;
+                }
+                
+                const relation = getRelationBetween(char.favor, char.love || 0, char.canLove, char.relationship);
+                const card = document.createElement('div');
+                card.className = `character-card ${selectedCharacter === name ? 'selected' : ''}`;
+                card.innerHTML = `
+                    <div class="character-name">${name}</div>
+                    <div class="character-relation">${char.role}</div>
+                    <div class="character-relation-badge">${relation}</div>
+                `;
+                card.addEventListener('click', () => selectCharacter(name));
+                characterGrid.appendChild(card);
+            });
+        }
+
+        // ==================== 选择人物 ====================
+        function selectCharacter(name) {
+            if (inChatMode) exitChatMode();
+            if (inInviteMode) exitInviteMode();
+            if (divorcePanel) divorcePanel.style.display = 'none';
+            
+            selectedCharacter = name;
+            const char = currentState.characters[name];
+            if (!char || char.status === '已故') return;
+            
+            const favorStage = getFavorStage(char.favor);
+            const loveStage = getLoveStage(char.love || 0);
+            const relation = getRelationBetween(char.favor, char.love || 0, char.canLove, char.relationship);
+            
+            if (detailName) detailName.innerText = name;
+            if (detailAge) detailAge.innerText = char.age || '?';
+            if (detailRole) detailRole.innerText = char.role || '?';
+            if (detailPersonality) detailPersonality.innerText = char.personality || '?';
+            if (detailAppearance) detailAppearance.innerText = char.appearance || '?';
+            if (detailRelationStage) detailRelationStage.innerText = relation;
+            if (detailFavor) detailFavor.innerText = char.favor || 0;
+            if (detailFavorStage) {
+                detailFavorStage.innerText = favorStage.name;
+                detailFavorStage.className = `relation-stage ${favorStage.class}`;
+            }
+            if (detailLove) detailLove.innerText = char.love || 0;
+            if (detailLoveStage) {
+                detailLoveStage.innerText = loveStage.name;
+                detailLoveStage.className = `love-stage ${loveStage.class}`;
+            }
+            if (detailStatus) detailStatus.innerText = char.status || '健康';
+            if (detailDesc) detailDesc.innerText = char.desc || '暂无描述';
+            if (characterDetail) characterDetail.classList.remove('panel-hidden');
+            
+            // 显示/隐藏按钮
+            if (talkBtn) talkBtn.style.display = 'block';
+            if (giftBtn) giftBtn.style.display = 'block';
+            if (inviteBtn) inviteBtn.style.display = 'block';
+            
+            if (char.canLove) {
+                if (char.relationship === 'married') {
+                    if (confessBtn) confessBtn.style.display = 'none';
+                    if (divorceBtn) divorceBtn.style.display = 'block';
+                } else if (char.relationship === 'dating') {
+                    if (confessBtn) confessBtn.style.display = 'none';
+                    if (divorceBtn) divorceBtn.style.display = 'block';
+                } else {
+                    if (confessBtn) confessBtn.style.display = 'block';
+                    if (divorceBtn) divorceBtn.style.display = 'none';
+                }
+            } else {
+                if (confessBtn) confessBtn.style.display = 'none';
+                if (divorceBtn) divorceBtn.style.display = 'none';
+            }
+            
+            if (backFromChatBtn) backFromChatBtn.style.display = 'none';
+            if (chatInterface) chatInterface.style.display = 'none';
+            if (invitePanel) invitePanel.style.display = 'none';
+            
+            renderCharacters();
+        }
+
+        // ==================== 下一回合（增强版）====================
+        function nextTurn() {
+            if (isApiCalling || gameOver) {
+                alert('无法进行下一回合');
+                return;
+            }
+            
+            currentState.week++;
+            todayExplored = {};
+            currentState.turnActions = [];
+            currentState.inviteRemaining = 2;
+            
+            // 检查节日
+            const festival = checkFestival(currentState.week);
+            if (festival) {
+                triggerFestival(festival);
+            }
+            
+            // 生成随机NPC事件
+            generateRandomNPC();
+            
+            // 检查吃醋事件
+            checkJealousy();
+            
+            // NPC关系演化
+            evolveNPCRelationships();
+            
+            // 更新年龄
+            updateAge();
+            
+            const newSeason = getSeasonFromWeek(currentState.week);
+            gameHint.innerText = `进入${newSeason}`;
+            
+            // 季节变化影响
+            const season = getSeasonType(currentState.week);
+            if (season === 'spring') {
+                storyDisplay.innerHTML = '<p>春天来了，寨子里到处充满生机。</p>';
+            } else if (season === 'summer') {
+                storyDisplay.innerHTML = '<p>夏天到了，天气渐渐热了起来。</p>';
+            } else if (season === 'autumn') {
+                storyDisplay.innerHTML = '<p>秋天是收获的季节，寨子里开始准备秋收。</p>';
+            } else {
+                storyDisplay.innerHTML = '<p>冬天降临，寨子里的人们开始准备过冬。</p>';
+            }
+            
+            // 检查游戏是否结束
+            if (gameOver) return;
+            
+            renderMap();
+            refreshUI();
+            drawRelationNetwork();
+            
+            // 自动存档
+            if (autoSaveMode && autoSaveMode.value === 'true') {
+                saveGame();
+            }
+        }
+
+        // ==================== 绘制关系网络图（增强版）====================
+        function drawRelationNetwork() {
+            if (!networkCanvas) return;
+            
+            const ctx = networkCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 450, 300);
+            
+            // 获取所有活着的NPC
+            const livingChars = Object.keys(currentState.characters).filter(name => 
+                currentState.characters[name].status !== '已故'
+            );
+            
+            // 计算节点位置（圆形布局）
+            const centerX = 225;
+            const centerY = 150;
+            const radius = 100;
+            
+            const nodes = [{ name: '你', x: centerX, y: 50, color: '#96734a' }];
+            
+            livingChars.forEach((name, index) => {
+                const angle = (index / livingChars.length) * 2 * Math.PI;
+                nodes.push({
+                    name: name,
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle),
+                    color: '#264e38'
+                });
+            });
+            
+            // 绘制连线
+            // 玩家与NPC的关系
+            nodes.slice(1).forEach(node => {
+                const char = currentState.characters[node.name];
+                if (char) {
+                    const relation = getRelationBetween(char.favor, char.love || 0, char.canLove, char.relationship);
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[0].x, nodes[0].y);
+                    ctx.lineTo(node.x, node.y);
+                    
+                    if (relation === '夫妻' || relation === '恋人') {
+                        ctx.strokeStyle = '#d4af37';
+                        ctx.lineWidth = 4;
+                    } else if (relation === '暧昧对象') {
+                        ctx.strokeStyle = '#b45fb4';
+                        ctx.lineWidth = 3;
+                    } else if (relation === '挚友') {
+                        ctx.strokeStyle = '#2d4d6e';
+                        ctx.lineWidth = 3;
+                    } else {
+                        ctx.strokeStyle = '#a4824e';
+                        ctx.lineWidth = 2;
+                    }
+                    
+                    ctx.stroke();
+                }
+            });
+            
+            // 绘制NPC之间的关系
+            if (currentState.npcRelations) {
+                ctx.strokeStyle = '#6b4d6b';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([5, 3]);
+                
+                for (let i = 1; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const npc1 = nodes[i].name;
+                        const npc2 = nodes[j].name;
+                        
+                        if (currentState.npcRelations[npc1] && currentState.npcRelations[npc1][npc2]) {
+                            const relationValue = currentState.npcRelations[npc1][npc2];
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(nodes[i].x, nodes[i].y);
+                            ctx.lineTo(nodes[j].x, nodes[j].y);
+                            
+                            if (relationValue >= 50) {
+                                ctx.strokeStyle = '#2d5a2d';
+                            } else if (relationValue <= -30) {
+                                ctx.strokeStyle = '#8b0000';
+                            } else {
+                                ctx.strokeStyle = '#6b4d6b';
+                            }
+                            
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            
+            ctx.setLineDash([]);
+            
+            // 绘制节点
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.fill();
+                ctx.strokeStyle = '#dbb063';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#f8d58c';
+                ctx.font = '12px "Segoe UI"';
+                ctx.textAlign = 'center';
+                ctx.fillText(node.name, node.x, node.y - 25);
+            });
+        }
+
+        // ==================== 刷新UI ====================
+        function refreshUI() {
+            const stats = calculateStats();
+            if (statCha) statCha.innerText = stats.cha;
+            if (statWis) statWis.innerText = stats.wis;
+            if (statPhys) statPhys.innerText = stats.phys;
+            if (statArt) statArt.innerText = stats.art;
+            if (statHp) statHp.innerText = stats.hp;
+            if (statMind) statMind.innerText = currentState.mind;
+            if (statMoney) statMoney.innerText = currentState.money;
+            
+            const season = getSeasonFromWeek(currentState.week);
+            if (weekDisplay) weekDisplay.innerText = `${season}·第${currentState.week}周`;
+            if (locationDisplay) locationDisplay.innerText = currentState.location;
+            if (playerNameDisplay) playerNameDisplay.innerText = currentState.playerName;
+            if (playerAge) playerAge.innerText = `${currentState.playerAge}岁`;
+            
+            if (playerTags) {
+                playerTags.innerHTML = currentState.traitNames.map(t => `#${t}`).join(' ');
+            }
+            
+            renderCharacters();
+            renderItems();
+            drawRelationNetwork();
+        }
+
+        // ==================== 渲染物品 ====================
+        function renderItems() {
+            if (!itemsGrid) return;
+            itemsGrid.innerHTML = `
+                <div class="item-card">贝币<br>💰 ${currentState.money || 0}</div>
+                <div class="item-card">糯米糕<br>🍚 ${currentState.items.ricecake || 0}</div>
+                <div class="item-card">绣线<br>🧵 ${currentState.items.thread || 0}</div>
+                <div class="item-card">银镯<br>✨ ${currentState.items.silver || 0}</div>
+                <div class="item-card">草药<br>🌿 ${currentState.items.herb || 0}</div>
+                <div class="item-card">竹笋<br>🎋 ${currentState.items.bamboo || 0}</div>
+                <div class="item-card">布料<br>🧶 ${currentState.items.cloth || 0}</div>
+            `;
+        }
+
+        // ==================== 重置游戏 ====================
+        window.resetGame = function() {
+            const { traitNames, traitEffects } = assignRandomTraits();
+            
+            // 尝试加载存档
+            const loaded = loadGame();
+            
+            if (!loaded) {
+                currentState = {
+                    playerName: playerName ? playerName.value : '阿苗',
+                    playerAge: 18,
+                    traitNames: traitNames,
+                    traitEffects: traitEffects,
+                    week: 1,
+                    location: '青榕寨',
+                    baseCha: 50, baseWis: 50, basePhys: 50, baseArt: 50,
+                    hp: 100, mind: 92,
+                    money: 25,
+                    mapCells: [],
+                    mapEvents: {},
+                    items: { ricecake: 0, thread: 0, silver: 0, herb: 0, bamboo: 0, cloth: 0 },
+                    characters: {
+                        '阿妈': { age: 45, role: '母亲', personality: '慈祥温和', appearance: '头发花白，面容和善', desc: '你的母亲，从小把你抚养长大。', favor: 80, love: 0, status: '健康', canLove: false, relationship: 'none', lifespan: 75 },
+                        '彩': { age: 19, role: '好友', personality: '活泼开朗', appearance: '扎着双马尾，眼睛明亮', desc: '从小一起长大的玩伴。', favor: 50, love: 0, status: '健康', canLove: true, relationship: 'none', lifespan: 70 },
+                        '寨公': { age: 52, role: '长老', personality: '威严公正', appearance: '花白胡须，目光深邃', desc: '寨子里的长老。', favor: 20, love: 0, status: '健康', canLove: false, relationship: 'none', lifespan: 80 },
+                        '姜央': { age: 20, role: '寨主', personality: '勇敢果断', appearance: '身材挺拔，眼神坚毅', desc: '年轻的寨主。', favor: 20, love: 0, status: '健康', canLove: true, relationship: 'none', lifespan: 75 },
+                        '阿婆': { age: 65, role: '草药师', personality: '慈祥睿智', appearance: '满头白发，眼神温和', desc: '最懂草药的人。', favor: 0, love: 0, status: '健康', canLove: false, relationship: 'none', lifespan: 85 }
+                    },
+                    npcRelations: {},
+                    settings: currentState.settings || { 
+                        apiMode: 'local', 
+                        apiKey: '', 
+                        apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', 
+                        selectedModel: '', 
+                        temperature: 0.7,
+                        streaming: true,
+                        autoSave: true,
+                        worldSetting: '古代苗疆，少女成长，部落寨子，自然崇拜，四季分明，有苗年、花山节、赶秋节等传统节日。'
+                    },
+                    chatHistory: {},
+                    storyContext: [],
+                    turnActions: [],
+                    inviteRemaining: 2
+                };
+            }
+            
+            gameOver = false;
+            initMap();
+            
+            storyDisplay.innerHTML = `
+                <p>晨雾还挂在吊脚楼角，你推开竹窗，青榕寨在鸟鸣中醒来。阿妈在火塘边蒸糯米，香气混着柴烟钻进鼻腔。</p>
+                <p>你今年18岁了，山脚榕树下，年轻人们正在扎堆，似乎要比试芦笙。</p>
+            `;
+            
+            renderChoiceButtons(['🌽 赶场', '🎵 芦笙', '🛏️ 帮阿妈']);
+            refreshUI();
+            
+            if (apiMessageSpan) apiMessageSpan.innerText = '⏳ 等待指令';
+            if (apiSpinner) apiSpinner.style.display = 'none';
+            selectedCharacter = null;
+            
+            document.querySelectorAll('.choice-btn, .free-submit, .next-turn-btn').forEach(btn => {
+                btn.classList.remove('disabled');
+            });
+        };
+
+        // ==================== 渲染选项按钮 ====================
+        function renderChoiceButtons(buttonLabels) {
+            if (!choiceButtonsDiv) return;
+            choiceButtonsDiv.innerHTML = '';
+            if (!buttonLabels || buttonLabels.length === 0) {
+                buttonLabels = ['🌽 赶场', '🎵 芦笙', '🛏️ 帮阿妈'];
+            }
+            buttonLabels.forEach(label => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = label;
+                btn.addEventListener('click', () => {
+                    if (isApiCalling || inChatMode || inInviteMode || gameOver) return;
+                    handleMainAction(label);
+                });
+                choiceButtonsDiv.appendChild(btn);
+            });
+        }
+
+        // ==================== 处理主要行动 ====================
+        async function handleMainAction(action) {
+            if (gameOver) return;
+            
+            isApiCalling = true;
+            currentState.turnActions.push(action);
+            
+            apiMessageSpan.innerText = '🤔 思考中...';
+            apiSpinner.style.display = 'inline-block';
+            
+            setTimeout(() => {
+                let storyAddition = '';
+                let newChoices = [];
+
+                if (action.includes('赶场')) {
+                    storyAddition = `你来到集市，这里人声鼎沸。卖山货的阿婆热情地招呼你，铁匠铺里叮叮当当响个不停。`;
+                    newChoices = ['💬 和彩聊天', '🎁 买绣线', '🌿 帮阿婆', '🍚 买糯米糕'];
+                    currentState.money -= 2;
+                    currentState.items.ricecake = (currentState.items.ricecake || 0) + 1;
+                    
+                } else if (action.includes('芦笙')) {
+                    storyAddition = `榕树下传来悠扬的芦笙声。姜央站在人群中央，吹奏得格外动听。`;
+                    newChoices = ['🏅 上前比试', '💧 在旁边观看', '🍠 买烤红薯', '👀 看姜央'];
+                    currentState.baseArt += 2;
+                    
+                } else if (action.includes('帮阿妈')) {
+                    storyAddition = `你帮阿妈染布，蓝靛的香味弥漫在屋子里。阿妈教了你新的绣法。`;
+                    newChoices = ['🌸 试戴银饰', '🍲 帮做饭', '🪡 继续学', '💬 听故事'];
+                    currentState.baseArt += 3;
+                    currentState.mind += 5;
+                    currentState.characters['阿妈'].favor = Math.min(100, currentState.characters['阿妈'].favor + 3);
+                    
+                } else {
+                    storyAddition = `你${action}。山间的风轻轻吹过。`;
+                    newChoices = ['🌾 继续', '🗣️ 聊天', '🏡 回家', '🌿 上山'];
+                    currentState.baseCha += 1;
+                }
+
+                if (storyDisplay) {
+                    storyDisplay.innerHTML = `<p>${storyAddition}</p>`;
+                }
+
+                renderChoiceButtons(newChoices);
+                currentState.storyContext.push({
+                    type: 'action',
+                    action: action,
+                    story: storyAddition
+                });
+                
+                refreshUI();
+                isApiCalling = false;
+                apiMessageSpan.innerText = '✅ 完成';
+                apiSpinner.style.display = 'none';
+            }, 800);
+        }
+
+        // ==================== 自由输入 ====================
+        if (freeSubmit) {
+            freeSubmit.addEventListener('click', () => {
+                if (gameOver) return;
+                const custom = freeInput.value.trim();
+                if (custom === '') {
+                    alert('请输入你想做的事');
+                    return;
+                }
+                handleMainAction(custom);
+                freeInput.value = '';
+            });
+        }
+
+        // ==================== 进入/退出游戏 ====================
+        function enterGame() {
+            entryPortal.style.display = 'none';
+            gameMain.style.display = 'block';
+            resetGame();
+        }
+
+        function backToEntry() {
+            if (abortController) {
+                abortController.abort();
+            }
+            if (autoSaveMode && autoSaveMode.value === 'true') {
+                saveGame();
+            }
+            gameMain.style.display = 'none';
+            entryPortal.style.display = 'block';
+        }
+
+        // ==================== 标签切换 ====================
+        tabItems.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                if (inChatMode) exitChatMode();
+                if (inInviteMode) exitInviteMode();
+                if (divorcePanel) divorcePanel.style.display = 'none';
+                
+                tabItems.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                storyPanel.classList.add('panel-hidden');
+                relationPanel.classList.add('panel-hidden');
+                networkPanel.classList.add('panel-hidden');
+                mapPanel.classList.add('panel-hidden');
+                itemsPanel.classList.add('panel-hidden');
+                settingsPanel.classList.add('panel-hidden');
+                
+                const tabName = tab.dataset.tab;
+                if (tabName === 'story') storyPanel.classList.remove('panel-hidden');
+                else if (tabName === 'relation') {
+                    relationPanel.classList.remove('panel-hidden');
+                    renderCharacters();
+                }
+                else if (tabName === 'network') {
+                    networkPanel.classList.remove('panel-hidden');
+                    drawRelationNetwork();
+                }
+                else if (tabName === 'map') {
+                    mapPanel.classList.remove('panel-hidden');
+                    renderMap();
+                }
+                else if (tabName === 'items') {
+                    itemsPanel.classList.remove('panel-hidden');
+                    renderItems();
+                }
+                else if (tabName === 'settings') settingsPanel.classList.remove('panel-hidden');
+            });
+        });
+
+        // ==================== 事件绑定 ====================
+        enterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            enterGame();
+        });
+
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            backToEntry();
+        });
+
+        restartBtn.addEventListener('click', () => {
+            if (isApiCalling) {
+                if (abortController) abortController.abort();
+            }
+            resetGame();
+        });
+
+        nextTurnBtn.addEventListener('click', nextTurn);
+        
+        saveBtn.addEventListener('click', () => {
+            if (saveGame()) {
+                showNotification('✅ 手动存档成功');
+            }
+        });
+
+        talkBtn.addEventListener('click', enterChatMode);
+        giftBtn.addEventListener('click', () => {
+            enterChatMode();
+            openGiftBackpack();
+        });
+        inviteBtn.addEventListener('click', showInvitePanel);
+        confessBtn.addEventListener('click', () => {
+            if (selectedCharacter) confessTo(selectedCharacter);
+        });
+        divorceBtn.addEventListener('click', showDivorcePanel);
+        confirmDivorceBtn.addEventListener('click', confirmDivorce);
+        cancelDivorceBtn.addEventListener('click', hideDivorcePanel);
+        backFromChatBtn.addEventListener('click', () => {
+            exitChatMode();
+            if (selectedCharacter) selectCharacter(selectedCharacter);
+        });
+        confirmInviteBtn.addEventListener('click', confirmInvite);
+        sendChatBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+        confirmGiftBtn.addEventListener('click', confirmGift);
+
+        // ==================== 保存设置 ====================
+        saveSettings.addEventListener('click', () => {
+            currentState.playerName = playerName.value || '阿苗';
+            currentState.settings = {
+                apiMode: apiMode.value,
+                apiKey: apiKey.value,
+                apiUrl: apiUrl.value,
+                selectedModel: modelSelect.value,
+                temperature: aiTemperature.value,
+                streaming: streamingMode.value === 'true',
+                autoSave: autoSaveMode.value === 'true',
+                worldSetting: worldSetting.value
+            };
+            playerNameDisplay.innerText = currentState.playerName;
+            showNotification('✅ 设置已保存');
+        });
+
+        // ==================== 初始化 ====================
+        entryPortal.style.display = 'block';
+        gameMain.style.display = 'none';
+        initMap();
+    })();
+</script>
+</body>
+</html>
