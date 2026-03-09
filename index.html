@@ -1366,35 +1366,85 @@
                 .map(([name, char]) => `${name}(${char.role},好感${char.favor})`)
                 .join('、');
 
-            // 构建提示词
-            const prompt = `你是一位文笔优美的苗族故事创作者，正在创作苗疆少女${currentState.playerName}的故事。
+             // 构建提示词 - 增强版AI创作要求
+            const prompt = `你是一位文笔优美的苗族故事创作者，正在创作苗疆少女${currentState.playerName}的一生。
 
 【当前状态】
 时间：${season}·第${currentState.week}周
 主角年龄：${currentState.playerAge}岁
 主角属性：魅力${stats.cha}、智慧${stats.wis}、体魄${stats.phys}、才艺${stats.art}
 当前地点：${currentState.location}
-健康NPC：${npcStatus || '无'}
+主角金钱：${currentState.money}贝币
 
-【世界观】
+【人际关系详情】
+${Object.entries(currentState.characters)
+    .filter(([_, c]) => c.status === '健康')
+    .map(([name, c]) => {
+        let relation = `${name}（${c.role}，性格${c.personality}）`;
+        relation += `\n  - 好感度：${c.favor}（${getFavorStage(c.favor).name}）`;
+        if (c.canLove) relation += `，爱慕值：${c.love}（${getLoveStage(c.love).name}）`;
+        if (c.relationship !== 'none') relation += `，关系：${c.relationship === 'dating' ? '恋爱中' : c.relationship === 'married' ? '已婚' : ''}`;
+        return relation;
+    })
+    .join('\n')}
+
+【背包物品】
+贝币: ${currentState.money}枚
+糯米糕: ${currentState.items.ricecake}块
+绣线: ${currentState.items.thread}束
+草药: ${currentState.items.herb}株
+银镯: ${currentState.items.silver}只
+
+【世界观背景】
 ${currentState.settings.worldSetting}
 
-【最近经历】
-${recentContext || '游戏刚刚开始，还没有特别的事件发生。'}
+【近期重要经历】
+${currentState.storyContext.slice(-3).map((ctx, i) => 
+    `[${i+1}] 你选择了“${ctx.choice}”，结果：${ctx.story.substring(0, 100)}...`
+).join('\n') || '游戏刚刚开始，还没有特别的事件发生。'}
 
-【玩家选择】
+【当前行动】
 ${currentState.playerName}决定：${action}
 
-请用优美细腻的文笔，以第二人称"你"的视角，描写接下来发生的剧情。
+请以第二人称“你”的视角，创作接下来发生的剧情。你的创作必须严格遵循以下要求：
 
-要求：
-1. 描写要生动具体，包含环境描写、人物对话、心理活动
-2. 剧情要合理有趣，能承接之前的剧情
-3. 根据当前好感度，让NPC的反应自然真实
-4. 最后给出3-5个后续可选的行动选项，用【】括起来
-   例如：【去集市逛逛】【找彩聊天】【回家休息】【上山采药】
+━━━━━━━━━━━━━━━━━━━━
+一、剧情创作要求
+━━━━━━━━━━━━━━━━━━━━
+1. 【篇幅要求】剧情至少300字以上，要写得细腻生动，让玩家有沉浸感
+2. 【环境描写】必须包含时间、天气、季节、场景的详细描写
+3. 【人物互动】根据当前好感度，让NPC的反应真实自然：
+   - 好感度高 → 热情、亲密、关心
+   - 好感度低 → 冷淡、疏离、客气
+   - 爱慕值高 → 害羞、脸红、暧昧
+4. 【心理活动】描写主角的内心感受和想法
+5. 【对话描写】加入生动的NPC对话，展现人物性格
+6. 【剧情连贯】要承接之前的剧情，不能割裂
 
-请直接开始描写剧情：`;
+━━━━━━━━━━━━━━━━━━━━
+二、数值变化要求
+━━━━━━━━━━━━━━━━━━━━
+1. 【好感度变化】剧情中与NPC互动后，必须明确写出好感度变化，格式如：
+   “（彩好感+2，姜央好感+1）”
+2. 【爱慕值变化】如果与可攻略NPC有亲密互动，可增加爱慕值
+3. 【物品变化】如果获得或消耗物品，要在剧情中体现
+4. 【属性变化】如果学到技能或有所领悟，可增加相应属性
+
+━━━━━━━━━━━━━━━━━━━━
+三、选项生成要求
+━━━━━━━━━━━━━━━━━━━━
+1. 【选项数量】最后给出4-5个后续可选的行动选项
+2. 【选项格式】用【】括起来，例如：【去集市逛逛】【找彩聊天】【回家休息】【上山采药】
+3. 【选项合理性】选项要基于当前剧情发展，不能凭空产生
+
+━━━━━━━━━━━━━━━━━━━━
+四、文笔风格要求
+━━━━━━━━━━━━━━━━━━━━
+1. 语言优美细腻，有文学性
+2. 符合苗族风情和古代背景
+3. 情感真挚动人，有代入感
+
+请直接开始创作剧情：`;
 
             try {
                 if (currentState.settings.apiMode === 'local') {
@@ -1732,56 +1782,54 @@ async function callCustomAPI(prompt) {
         }
 
         // 处理响应
-        if (fullResponse) {
-            const options = fullResponse.match(/【(.*?)】/g) || [];
-            const cleanResponse = fullResponse.replace(/【.*?】/g, '').trim();
-            
-            if (storyDisplay) {
-                storyDisplay.innerHTML = `<p>${cleanResponse.replace(/\n/g, '<br>')}</p>`;
-            }
-            
-            if (options.length > 0) {
-                renderChoiceButtons(options.map(opt => opt.replace(/[【】]/g, '')));
-            } else {
-                renderChoiceButtons(['🌾 继续', '🗣️ 找人聊天', '🏡 回家', '🌿 上山采药']);
-            }
-            
-            currentState.storyContext.push({
-                choice: currentState.lastChoice,
-                story: cleanResponse
-            });
-
-            if (currentState.storyContext.length > 10) {
-                currentState.storyContext = currentState.storyContext.slice(-10);
-            }
-        }
-
-        if (streamingContent) {
-            setTimeout(() => {
-                streamingContent.classList.remove('active');
-            }, 3000);
-        }
-
-        apiMessageSpan.innerText = '✅ 生成完成';
-
-    } catch (error) {
-        clearTimeout(timeoutId);
+if (fullResponse) {
+    // 提取选项（用【】括起来的部分）
+    const options = fullResponse.match(/【(.*?)】/g) || [];
+    
+    // 检查是否包含好感变化提示
+    let cleanResponse = fullResponse;
+    let favorChanges = [];
+    
+    // 如果响应中已经有（好感+2）这样的格式，保留
+    // 如果没有，在后面添加随机好感变化
+    if (!fullResponse.includes('（') && !fullResponse.includes('）')) {
+        // 随机选择1-2个在场的NPC增加好感
+        const availableNPCs = Object.keys(currentState.characters).filter(name => 
+            currentState.characters[name].status === '健康'
+        );
         
-        if (error.name === 'AbortError') {
-            console.log('请求被取消');
-            apiMessageSpan.innerText = '⏹️ 请求已取消';
-        } else {
-            console.error('API错误:', error);
-            apiMessageSpan.innerText = `❌ ${error.message}`;
+        if (availableNPCs.length > 0) {
+            const npc = availableNPCs[Math.floor(Math.random() * availableNPCs.length)];
+            const gain = Math.floor(Math.random() * 3) + 1;
+            currentState.characters[npc].favor = Math.min(100, currentState.characters[npc].favor + gain);
+            favorChanges.push(`${npc}好感+${gain}`);
             
-            if (storyDisplay) {
-                storyDisplay.innerHTML = `<p style="color:#ffaaaa;">⚠️ API调用失败: ${error.message}</p><p>已切换回本地模式继续游戏。</p>`;
+            if (currentState.characters[npc].canLove && Math.random() > 0.7) {
+                const loveGain = Math.floor(Math.random() * 2) + 1;
+                currentState.characters[npc].love = Math.min(100, currentState.characters[npc].love + loveGain);
+                favorChanges.push(`${npc}爱慕+${loveGain}`);
             }
-            
-            await simulateLocalStory(currentState.lastChoice);
         }
-    } finally {
-        abortController = null;
+    }
+    
+    // 移除选项标记，得到纯净的剧情文本
+    cleanResponse = fullResponse.replace(/【.*?】/g, '').trim();
+    
+    // 添加好感变化提示
+    if (favorChanges.length > 0) {
+        cleanResponse += `\n\n（${favorChanges.join('，')}）`;
+    }
+    
+    if (storyDisplay) {
+        storyDisplay.innerHTML = `<p>${cleanResponse.replace(/\n/g, '<br>')}</p>`;
+    }
+    
+    if (options.length > 0) {
+        renderChoiceButtons(options.map(opt => opt.replace(/[【】]/g, '')));
+    } else {
+        renderChoiceButtons(['🌾 继续', '🗣️ 找人聊天', '🏡 回家', '🌿 上山采药']);
+    }
+}
     }
 }
 
@@ -2954,6 +3002,26 @@ ${currentState.playerName}对你说：${message}
             setButtonsDisabled(false);
             refreshUI();
         }
+        // 在API调用部分，添加更详细的提示词
+const prompt = `你是${selectedCharacter}，${char.role}，性格${char.personality}。
+当前与${currentState.playerName}的好感度是${char.favor}，爱慕值是${char.love}。
+
+${currentState.playerName}对你说：${message}
+
+请以${selectedCharacter}的身份，用自然的口吻回复这句话。回复要符合角色性格，要生动具体，不能只说"..."。`;
+
+// 处理响应时，确保不是"..."
+if (response === '“...”' || response === '...' || response.length < 5) {
+    // 如果返回的是省略号，用预设回复代替
+    const fallbackResponses = [
+        `“嗯，我明白了。”`,
+        `“今天天气真好啊。”`,
+        `“你最近怎么样？”`,
+        `“我很高兴见到你。”`,
+        `“你说得对。”`
+    ];
+    response = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+}
 
         // ==================== 打开送礼面板 ====================
         function openGiftPanel() {
