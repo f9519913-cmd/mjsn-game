@@ -1646,4 +1646,1398 @@
                     return '🍁 赶秋节到了！山场上歌声悠扬，你的魅力提升了！';
                 }
             }
-        ];
+        ];// ==================== 随机NPC生成和结识系统 ====================
+const RANDOM_NPC_NAMES = [
+    '阿牛', '阿花', '阿贵', '阿莲', '阿成', '阿月', '阿山', '阿水',
+    '外来商人', '游方歌手', '邻寨青年', '采药老人', '打铁匠', '卖货郎',
+    '绣娘阿香', '猎户阿虎', '渔夫阿青', '木匠阿福', '巫医阿婆'
+];
+
+const RANDOM_NPC_PERSONALITIES = [
+    '热情开朗', '沉默寡言', '幽默风趣', '温柔体贴', '直率豪爽', '心思细腻'
+];
+
+// 结识的NPC列表（动态添加）
+let metNPCs = [];
+
+function generateRandomNPC() {
+    if (Math.random() > 0.25) return; // 25%概率触发
+    
+    const npcName = RANDOM_NPC_NAMES[Math.floor(Math.random() * RANDOM_NPC_NAMES.length)];
+    const personality = RANDOM_NPC_PERSONALITIES[Math.floor(Math.random() * RANDOM_NPC_PERSONALITIES.length)];
+    
+    // 检查是否已经结识过
+    if (currentState.characters[npcName]) return;
+    
+    const event = RANDOM_NPC_EVENTS[Math.floor(Math.random() * RANDOM_NPC_EVENTS.length)];
+    
+    if (randomNPCContainer) {
+        randomNPCContainer.innerHTML = `
+            <div class="random-npc">
+                <p>👤 你遇到了 ${npcName}</p>
+                <p>${event.desc}</p>
+                <div style="display:flex; gap:5px; margin-top:8px;">
+                    ${event.choices.map(choice => 
+                        `<button class="choice-btn" style="flex:1;" onclick="handleRandomNPCEvent('${choice}', '${npcName}', '${personality}')">${choice}</button>`
+                    ).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    window.currentRandomEvent = { npcName, personality, event };
+}
+
+// ==================== 处理随机NPC事件并自动添加到人脉 ====================
+window.handleRandomNPCEvent = function(choice, npcName, personality) {
+    if (!window.currentRandomEvent) return;
+    
+    const result = window.currentRandomEvent.event.effects(currentState, choice);
+    
+    // 如果选择了好感选项，自动结识该NPC
+    if (choice === '帮他找妈妈' || choice === '亲自带路' || choice === '劝架' || choice === '帮忙') {
+        if (!currentState.characters[npcName]) {
+            // 随机生成NPC年龄和属性
+            const age = Math.floor(Math.random() * 40) + 15;
+            const canLove = Math.random() > 0.5;
+            const favor = Math.floor(Math.random() * 30) + 20;
+            
+            currentState.characters[npcName] = {
+                age: age,
+                role: '路人',
+                personality: personality,
+                appearance: '初次相遇，印象深刻',
+                desc: `在苗寨中遇到的${personality}的${npcName}`,
+                favor: favor,
+                love: 0,
+                status: '健康',
+                canLove: canLove,
+                relationship: 'none',
+                lifespan: Math.floor(Math.random() * 30) + 60,
+                met: true
+            };
+            
+            result += ` 你结识了${npcName}，他/她被添加到人脉中。`;
+            
+            // 触发结识事件
+            if (storyDisplay) {
+                storyDisplay.innerHTML += `<p>✨ 新朋友：${npcName}加入了你的社交圈！</p>`;
+            }
+        }
+    }
+    
+    if (randomNPCContainer) {
+        randomNPCContainer.innerHTML = `
+            <div class="random-npc">
+                <p>${result}</p>
+            </div>
+        `;
+        setTimeout(() => {
+            randomNPCContainer.innerHTML = '';
+        }, 5000);
+    }
+    if (storyDisplay) {
+        storyDisplay.innerHTML = `<p>${result}</p>`;
+    }
+    window.currentRandomEvent = null;
+    refreshUI();
+};
+
+const RANDOM_NPC_EVENTS = [
+    {
+        desc: '一个迷路的小孩在路边哭泣，看起来很可怜。',
+        choices: ['帮他找妈妈', '给他一块糯米糕', '离开'],
+        effects: (state, choice) => {
+            if (choice === '帮他找妈妈') {
+                state.mind += 5;
+                return '你花了一个时辰帮小孩找到妈妈，她感激地送你一些草药。';
+            } else if (choice === '给他一块糯米糕') {
+                if (state.items.ricecake > 0) {
+                    state.items.ricecake--;
+                    state.mind += 3;
+                    return '小孩吃了糯米糕，破涕为笑，自己跑去找妈妈了。';
+                }
+                return '你没有糯米糕可以给他。';
+            }
+            return '你离开了。';
+        }
+    },
+    {
+        desc: '一个外乡人向你问路，想去集市。',
+        choices: ['亲自带路', '指路', '不理他'],
+        effects: (state, choice) => {
+            if (choice === '亲自带路') {
+                state.money += 5;
+                return '你带外乡人去了集市，他感激地给了你几个贝币。';
+            } else if (choice === '指路') {
+                state.baseWis += 1;
+                return '你给他指了路，他道谢后离开了。';
+            }
+            return '你假装没听见。';
+        }
+    },
+    {
+        desc: '你看到两个小孩在打架，其中一个快哭了。',
+        choices: ['劝架', '找大人来', '旁观'],
+        effects: (state, choice) => {
+            if (choice === '劝架') {
+                state.baseWis += 2;
+                return '你分开两个小孩，讲了道理，他们握手言和。';
+            } else if (choice === '找大人来') {
+                return '你找来他们的父母，小孩被带回家了。';
+            }
+            return '你看了一会儿，觉得无聊就走了。';
+        }
+    },
+    {
+        desc: '一位老人摔倒在路边，看起来需要帮助。',
+        choices: ['扶他起来', '帮忙叫人来', '离开'],
+        effects: (state, choice) => {
+            if (choice === '扶他起来') {
+                state.mind += 8;
+                state.items.herb = (state.items.herb || 0) + 2;
+                return '你扶起老人，他感激地送了你一些草药。';
+            } else if (choice === '帮忙叫人来') {
+                return '你叫来几个年轻人，一起把老人送回了家。';
+            }
+            return '你犹豫了一下，还是离开了。';
+        }
+    }
+];
+
+// ==================== 吃醋系统 ====================
+function checkJealousy() {
+    const lovableChars = Object.keys(currentState.characters).filter(name => 
+        currentState.characters[name].canLove && 
+        currentState.characters[name].love >= 50 &&
+        currentState.characters[name].status === '健康'
+    );
+    
+    if (lovableChars.length >= 2 && Math.random() < 0.3) { // 30%概率触发吃醋
+        const jealous = lovableChars[Math.floor(Math.random() * lovableChars.length)];
+        const target = lovableChars.filter(n => n !== jealous)[Math.floor(Math.random() * (lovableChars.length - 1))];
+        
+        const jealousChar = currentState.characters[jealous];
+        const targetChar = currentState.characters[target];
+        
+        let eventDesc = '';
+        
+        if (jealousChar.relationship === 'married' || jealousChar.relationship === 'dating') {
+            // 吃醋事件
+            jealousChar.favor = Math.max(0, jealousChar.favor - 10);
+            jealousChar.love = Math.max(0, jealousChar.love - 5);
+            
+            eventDesc = `💔 ${jealous}看到你和${target}走得很近，心里很不舒服。好感度下降了。`;
+            
+            if (Math.random() < 0.5) {
+                // 冲突事件
+                targetChar.favor = Math.max(0, targetChar.favor - 5);
+                eventDesc += ` ${jealous}和${target}发生了争执。`;
+            }
+        }
+        
+        if (jealousyContainer && eventDesc) {
+            jealousyContainer.innerHTML = `
+                <div class="jealousy-event">
+                    <p>${eventDesc}</p>
+                </div>
+            `;
+            setTimeout(() => {
+                jealousyContainer.innerHTML = '';
+            }, 5000);
+        }
+    }
+}
+
+// ==================== NPC之间的关系演化 ====================
+function evolveNPCRelationships() {
+    // NPC之间随机互动，可能成为朋友或敌人
+    const npcs = Object.keys(currentState.characters).filter(name => name !== '你');
+    
+    for (let i = 0; i < npcs.length; i++) {
+        for (let j = i + 1; j < npcs.length; j++) {
+            if (Math.random() < 0.05) { // 5%概率发生互动
+                const npc1 = npcs[i];
+                const npc2 = npcs[j];
+                
+                const relationChange = Math.random() > 0.5 ? 3 : -2;
+                
+                // 更新NPC之间的关系
+                if (!currentState.npcRelations) {
+                    currentState.npcRelations = {};
+                }
+                if (!currentState.npcRelations[npc1]) {
+                    currentState.npcRelations[npc1] = {};
+                }
+                if (!currentState.npcRelations[npc2]) {
+                    currentState.npcRelations[npc2] = {};
+                }
+                
+                currentState.npcRelations[npc1][npc2] = (currentState.npcRelations[npc1][npc2] || 0) + relationChange;
+                currentState.npcRelations[npc2][npc1] = (currentState.npcRelations[npc2][npc1] || 0) + relationChange;
+                
+                // 如果关系变差到一定程度，可能变成敌人
+                if (currentState.npcRelations[npc1][npc2] <= -30) {
+                    if (storyDisplay) {
+                        storyDisplay.innerHTML += `<p>⚔️ ${npc1}和${npc2}的关系恶化了，他们现在互相敌视。</p>`;
+                    }
+                }
+                
+                // 如果关系变好，可能变成朋友
+                if (currentState.npcRelations[npc1][npc2] >= 50) {
+                    if (storyDisplay) {
+                        storyDisplay.innerHTML += `<p>🤝 ${npc1}和${npc2}成为了好朋友。</p>`;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ==================== 离婚系统 ====================
+function showDivorcePanel() {
+    if (!selectedCharacter) return;
+    const char = currentState.characters[selectedCharacter];
+    
+    if (char.relationship !== 'married') {
+        alert('你们不是夫妻关系');
+        return;
+    }
+    
+    if (divorcePanel) {
+        divorcePanel.style.display = 'block';
+    }
+    if (talkBtn) talkBtn.style.display = 'none';
+    if (giftBtn) giftBtn.style.display = 'none';
+    if (inviteBtn) inviteBtn.style.display = 'none';
+    if (confessBtn) confessBtn.style.display = 'none';
+    if (divorceBtn) divorceBtn.style.display = 'none';
+}
+
+function hideDivorcePanel() {
+    if (divorcePanel) {
+        divorcePanel.style.display = 'none';
+    }
+    if (selectedCharacter) {
+        selectCharacter(selectedCharacter);
+    }
+}
+
+function confirmDivorce() {
+    if (!selectedCharacter) return;
+    
+    const char = currentState.characters[selectedCharacter];
+    
+    // 对方主动提出离婚的概率
+    const主动离婚 = Math.random() < 0.2;
+    
+    if (主动离婚) {
+        // 对方先提出离婚
+        if (storyDisplay) {
+            storyDisplay.innerHTML = `<p>😢 ${selectedCharacter}提出了离婚...你们的关系结束了。</p>`;
+        }
+        char.relationship = 'none';
+        char.favor = Math.max(0, char.favor - 30);
+        char.love = 0;
+        hideDivorcePanel();
+        refreshUI();
+        return;
+    }
+    
+    // 根据好感度决定离婚成功率
+    let successRate = 100;
+    if (char.favor >= 80 && char.love >= 60) {
+        successRate = 40; // 高好感时40%不同意
+    } else if (char.favor >= 50) {
+        successRate = 70;
+    } else {
+        successRate = 100;
+    }
+    
+    const success = Math.random() * 100 < successRate;
+    
+    if (success) {
+        // 离婚成功
+        if (storyDisplay) {
+            storyDisplay.innerHTML = `<p>⚖️ 你和${selectedCharacter}离婚了。</p>`;
+        }
+        char.relationship = 'none';
+        char.favor = Math.max(0, char.favor - 20);
+        char.love = 0;
+    } else {
+        // 对方不同意离婚
+        if (storyDisplay) {
+            storyDisplay.innerHTML = `<p>💔 ${selectedCharacter}不同意离婚，你们需要再考虑考虑。</p>`;
+        }
+        char.favor = Math.max(0, char.favor - 5);
+    }
+    
+    hideDivorcePanel();
+    refreshUI();
+}
+
+// ==================== AI随机生成地图 ====================
+const MAP_TYPES = [
+    '青榕寨', '溪边', '竹林', '药田', '集市', '祠堂', 
+    '山脚', '梯田', '枫树林', '后山', '瀑布', '山洞',
+    '花坡', '石林', '茶园', '蜂场', '染坊', '银铺'
+];
+
+const MAP_DESC = {
+    '青榕寨': '寨子中心，热闹非凡',
+    '溪边': '清澈的溪水流过，女子们在此洗衣',
+    '竹林': '翠竹成林，四季景色各异',
+    '药田': '阿婆的草药田，弥漫着药香',
+    '集市': '交易物品的地方',
+    '祠堂': '供奉祖先的地方，庄严肃穆',
+    '山脚': '通往深山的入口',
+    '梯田': '层层梯田，稻谷飘香',
+    '枫树林': '秋天枫叶似火',
+    '后山': '寨子后面的山，常有野兽出没',
+    '瀑布': '飞流直下的瀑布，水雾弥漫',
+    '山洞': '神秘的山洞，据说有宝藏',
+    '花坡': '开满野花的山坡，景色优美',
+    '石林': '奇特的石林地貌，容易迷路',
+    '茶园': '层层叠叠的茶园，茶香四溢',
+    '蜂场': '养蜂的地方，蜂蜜香甜',
+    '染坊': '染布的地方，蓝靛飘香',
+    '银铺': '打造银饰的地方，叮当作响'
+};
+
+const MAP_DANGER = {
+    '低': ['青榕寨', '溪边', '药田', '集市', '祠堂', '茶园', '染坊', '银铺'],
+    '中': ['竹林', '山脚', '梯田', '枫树林', '花坡', '蜂场'],
+    '高': ['后山', '瀑布', '山洞', '石林']
+};
+
+function generateRandomMap() {
+    // 随机选择9个不重复的地点
+    const shuffled = [...MAP_TYPES].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 9);
+    
+    const mapCells = [];
+    
+    for (let i = 0; i < 9; i++) {
+        const type = selected[i];
+        let danger = '低';
+        
+        // 根据地点类型设置危险等级
+        for (let [level, locations] of Object.entries(MAP_DANGER)) {
+            if (locations.includes(type)) {
+                danger = level;
+                break;
+            }
+        }
+        
+        mapCells.push({
+            id: i,
+            name: type,
+            desc: MAP_DESC[type] || '未知地点',
+            explored: false,
+            danger: danger,
+            eventTriggered: false
+        });
+    }
+    
+    return mapCells;
+}
+
+// ==================== 季节系统 ====================
+const SEASONS = ['春一月', '春二月', '春三月', '夏一月', '夏二月', '夏三月', '秋一月', '秋二月', '秋三月', '冬一月', '冬二月', '冬三月'];
+
+function getSeasonFromWeek(week) {
+    const index = (week - 1) % 12;
+    return SEASONS[index];
+}
+
+function getSeasonType(week) {
+    const index = (week - 1) % 12;
+    if (index < 3) return 'spring';
+    if (index < 6) return 'summer';
+    if (index < 9) return 'autumn';
+    return 'winter';
+}
+
+// ==================== 检查节日 ====================
+function checkFestival(week) {
+    const month = ((week - 1) % 12) + 1;
+    const weekInMonth = ((week - 1) % 3) + 1;
+    
+    for (let festival of FESTIVALS) {
+        if (festival.month === month && festival.week === weekInMonth) {
+            return festival;
+        }
+    }
+    return null;
+}
+
+// ==================== 触发节日事件 ====================
+function triggerFestival(festival) {
+    const result = festival.effects(currentState);
+    if (festivalContainer) {
+        festivalContainer.innerHTML = `
+            <div class="festival-event">
+                <h3 style="color:#1d2b35;">🎊 ${festival.name} 🎊</h3>
+                <p style="margin:5px 0;">${festival.description}</p>
+                <p style="margin:5px 0;">活动：${festival.activities.join(' · ')}</p>
+                <p style="margin:5px 0; font-weight:bold;">${result}</p>
+            </div>
+        `;
+        setTimeout(() => {
+            festivalContainer.innerHTML = '';
+        }, 10000);
+    }
+    if (storyDisplay) {
+        storyDisplay.innerHTML = `<p>${result}</p>`;
+    }
+                }// ==================== 游戏状态 ====================
+let currentState = {
+    playerName: '阿苗',
+    playerAge: 18,
+    traitNames: [],
+    traitEffects: { cha: 0, wis: 0, phys: 0, art: 0, hp: 0, wisGrowth: 1.0, physGrowth: 1.0 },
+    week: 1,
+    location: '青榕寨',
+    baseCha: 50, baseWis: 50, basePhys: 50, baseArt: 50,
+    hp: 100, mind: 92,
+    money: 25,
+    mapCells: [],
+    mapEvents: {},
+    items: { 
+        ricecake: 0, 
+        thread: 0, 
+        silver: 0, 
+        herb: 0,
+        bamboo: 0,
+        cloth: 0
+    },
+    characters: {
+        '阿妈': { age: 45, role: '母亲', personality: '慈祥温和', appearance: '头发花白，面容和善', desc: '你的母亲，从小把你抚养长大。', favor: 80, love: 0, status: '健康', canLove: false, relationship: 'none', lifespan: 75 },
+        '彩': { age: 19, role: '好友', personality: '活泼开朗', appearance: '扎着双马尾，眼睛明亮', desc: '从小一起长大的玩伴。', favor: 50, love: 0, status: '健康', canLove: true, relationship: 'none', lifespan: 70 },
+        '寨公': { age: 52, role: '长老', personality: '威严公正', appearance: '花白胡须，目光深邃', desc: '寨子里的长老。', favor: 20, love: 0, status: '健康', canLove: false, relationship: 'none', lifespan: 80 },
+        '姜央': { age: 20, role: '寨主', personality: '勇敢果断', appearance: '身材挺拔，眼神坚毅', desc: '年轻的寨主。', favor: 20, love: 0, status: '健康', canLove: true, relationship: 'none', lifespan: 75 },
+        '阿婆': { age: 65, role: '草药师', personality: '慈祥睿智', appearance: '满头白发，眼神温和', desc: '最懂草药的人。', favor: 0, love: 0, status: '健康', canLove: false, relationship: 'none', lifespan: 85 }
+    },
+    npcRelations: {}, // 存储NPC之间的关系
+    settings: { 
+        apiMode: 'local', 
+        apiKey: '', 
+        apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', 
+        selectedModel: '', 
+        temperature: 0.7,
+        streaming: true,
+        autoSave: true,
+        worldSetting: '古代苗疆，少女成长，部落寨子，自然崇拜，四季分明，有苗年、花山节、赶秋节等传统节日。'
+    },
+    availableModels: [],
+    chatHistory: {},
+    storyContext: [],
+    turnActions: [],
+    inviteRemaining: 2,
+    lastAIResponse: '', // 存储上次AI回复用于上下文
+    conversationHistory: [] // 对话历史
+};
+
+let isApiCalling = false;
+let selectedCharacter = null;
+let todayExplored = {};
+let inChatMode = false;
+let inInviteMode = false;
+let selectedGiftItem = null;
+let selectedInviteLocation = null;
+let currentMapEvent = null;
+let currentMapCellIndex = null;
+let abortController = null;
+let gameOver = false;
+
+// ==================== 计算最终属性 ====================
+function calculateStats() {
+    return {
+        cha: Math.min(100, Math.max(0, currentState.baseCha + (currentState.traitEffects.cha || 0))),
+        wis: Math.min(100, Math.max(0, currentState.baseWis + (currentState.traitEffects.wis || 0))),
+        phys: Math.min(100, Math.max(0, currentState.basePhys + (currentState.traitEffects.phys || 0))),
+        art: Math.min(100, Math.max(0, currentState.baseArt + (currentState.traitEffects.art || 0))),
+        hp: Math.min(100, Math.max(0, currentState.hp + (currentState.traitEffects.hp || 0)))
+    };
+}
+
+// ==================== 随机分配标签 ====================
+function assignRandomTraits() {
+    const numTraits = Math.floor(Math.random() * 3) + 1;
+    const shuffled = [...TRAITS].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, numTraits);
+    
+    let traitNames = [];
+    let traitEffects = { cha: 0, wis: 0, phys: 0, art: 0, hp: 0, wisGrowth: 1.0, physGrowth: 1.0 };
+
+    selected.forEach(trait => {
+        traitNames.push(trait.name);
+        if (trait.effect.cha) traitEffects.cha += trait.effect.cha;
+        if (trait.effect.wis) traitEffects.wis += trait.effect.wis;
+        if (trait.effect.phys) traitEffects.phys += trait.effect.phys;
+        if (trait.effect.art) traitEffects.art += trait.effect.art;
+        if (trait.effect.hp) traitEffects.hp += trait.effect.hp;
+        if (trait.effect.wisGrowth) traitEffects.wisGrowth = trait.effect.wisGrowth;
+        if (trait.effect.physGrowth) traitEffects.physGrowth = trait.effect.physGrowth;
+    });
+
+    return { traitNames, traitEffects };
+}
+
+// ==================== 年龄和死亡系统 ====================
+function updateAge() {
+    const years = Math.floor(currentState.week / 52);
+    currentState.playerAge = 18 + years;
+    
+    if (playerAge) {
+        playerAge.innerText = `${currentState.playerAge}岁`;
+    }
+    
+    // 检查主角死亡
+    if (currentState.playerAge >= 65) {
+        gameOver = true;
+        showDeathMessage('你度过了充实的一生，在65岁时安详离世。');
+        return;
+    }
+    
+    if (currentState.hp <= 0) {
+        gameOver = true;
+        showDeathMessage('你因伤势过重，离开了人世。');
+        return;
+    }
+    
+    // 检查NPC死亡
+    Object.keys(currentState.characters).forEach(name => {
+        const char = currentState.characters[name];
+        if (char.status === '已故') return;
+        
+        const npcAge = char.age + Math.floor(currentState.week / 52);
+        if (npcAge >= char.lifespan) {
+            char.status = '已故';
+            if (storyDisplay) {
+                storyDisplay.innerHTML += `<p>😢 ${name} 去世了...</p>`;
+            }
+        }
+    });
+}
+
+function showDeathMessage(message) {
+    if (storyDisplay) {
+        storyDisplay.innerHTML = `
+            <div class="death-message">
+                <h2>⚰️ 游戏结束 ⚰️</h2>
+                <p>${message}</p>
+                <p>你一共活了 ${currentState.playerAge} 岁</p>
+                <p>一生结识了 ${Object.keys(currentState.characters).length} 位朋友</p>
+                <button class="choice-btn" onclick="resetGame()">重新开始</button>
+            </div>
+        `;
+    }
+    document.querySelectorAll('.choice-btn, .free-submit, .next-turn-btn').forEach(btn => {
+        btn.classList.add('disabled');
+    });
+}
+
+// ==================== 初始化地图（AI随机生成）====================
+function initMap() {
+    currentState.mapCells = generateRandomMap();
+    currentState.mapEvents = {};
+    for (let i = 0; i < currentState.mapCells.length; i++) {
+        currentState.mapEvents[i] = false;
+    }
+    todayExplored = {};
+    if (mapGrid) renderMap();
+}
+
+// ==================== 渲染地图 ====================
+function renderMap() {
+    if (!mapGrid) return;
+    const season = getSeasonType(currentState.week);
+    
+    mapGrid.innerHTML = '';
+    currentState.mapCells.forEach((cell, index) => {
+        const cellDiv = document.createElement('div');
+        cellDiv.className = `map-cell ${cell.explored ? 'explored' : ''} ${todayExplored[index] ? 'disabled' : ''} ${!currentState.mapEvents[index] && !cell.explored ? 'event-triggered' : ''} ${season}`;
+        cellDiv.innerText = cell.name;
+        cellDiv.dataset.index = index;
+        cellDiv.addEventListener('click', () => exploreMap(index));
+        mapGrid.appendChild(cellDiv);
+    });
+}
+
+// ==================== 探索地图 ====================
+function exploreMap(index) {
+    if (isApiCalling || inChatMode || inInviteMode || gameOver) return;
+    if (todayExplored[index]) {
+        if (mapMessage) mapMessage.innerText = '⚠️ 这个地方本回合已经探索过了';
+        return;
+    }
+
+    const cell = currentState.mapCells[index];
+    todayExplored[index] = true;
+    currentState.turnActions.push(`探索${cell.name}`);
+    
+    // 根据危险等级决定事件
+    let exploreResult = `你探索了${cell.name}，${cell.desc}`;
+    
+    if (cell.danger === '高' && Math.random() < 0.4) {
+        // 高危险区域可能受伤
+        currentState.hp = Math.max(0, currentState.hp - 10);
+        exploreResult += '，不小心受伤了，生命-10。';
+    } else if (Math.random() > 0.5) {
+        const items = ['贝币', '草药', '竹笋', '布料'];
+        const found = items[Math.floor(Math.random() * items.length)];
+        if (found === '贝币') {
+            currentState.money += 5;
+            exploreResult += '，发现了5个贝币';
+        } else if (found === '草药') {
+            currentState.items.herb = (currentState.items.herb || 0) + 1;
+            exploreResult += '，采到了草药';
+        } else if (found === '竹笋') {
+            currentState.items.bamboo = (currentState.items.bamboo || 0) + 1;
+            exploreResult += '，发现了竹笋';
+        } else if (found === '布料') {
+            currentState.items.cloth = (currentState.items.cloth || 0) + 1;
+            exploreResult += '，捡到一块布料';
+        }
+    }
+    
+    cell.explored = true;
+    
+    if (mapMessage) mapMessage.innerText = exploreResult;
+    if (storyDisplay) {
+        storyDisplay.innerHTML = `<p>${exploreResult}</p>`;
+    }
+    
+    renderMap();
+    refreshUI();
+}
+
+// ==================== 渲染人际关系 ====================
+function renderCharacters() {
+    if (!characterGrid) return;
+    characterGrid.innerHTML = '';
+    Object.keys(currentState.characters).forEach(name => {
+        const char = currentState.characters[name];
+        if (char.status === '已故') {
+            // 显示已故NPC但置灰
+            const card = document.createElement('div');
+            card.className = 'character-card dead';
+            card.innerHTML = `
+                <div class="character-name">${name} 💀</div>
+                <div class="character-relation">${char.role}</div>
+                <div class="character-relation-badge">已故</div>
+            `;
+            characterGrid.appendChild(card);
+            return;
+        }
+        
+        const relation = getRelationBetween(char.favor, char.love || 0, char.canLove, char.relationship);
+        const card = document.createElement('div');
+        card.className = `character-card ${selectedCharacter === name ? 'selected' : ''}`;
+        card.innerHTML = `
+            <div class="character-name">${name}</div>
+            <div class="character-relation">${char.role}</div>
+            <div class="character-relation-badge">${relation}</div>
+        `;
+        card.addEventListener('click', () => selectCharacter(name));
+        characterGrid.appendChild(card);
+    });
+}
+
+// ==================== 选择人物 ====================
+function selectCharacter(name) {
+    if (inChatMode) exitChatMode();
+    if (inInviteMode) exitInviteMode();
+    if (divorcePanel) divorcePanel.style.display = 'none';
+    
+    selectedCharacter = name;
+    const char = currentState.characters[name];
+    if (!char || char.status === '已故') return;
+    
+    const favorStage = getFavorStage(char.favor);
+    const loveStage = getLoveStage(char.love || 0);
+    const relation = getRelationBetween(char.favor, char.love || 0, char.canLove, char.relationship);
+    
+    if (detailName) detailName.innerText = name;
+    if (detailAge) detailAge.innerText = char.age || '?';
+    if (detailRole) detailRole.innerText = char.role || '?';
+    if (detailPersonality) detailPersonality.innerText = char.personality || '?';
+    if (detailAppearance) detailAppearance.innerText = char.appearance || '?';
+    if (detailRelationStage) detailRelationStage.innerText = relation;
+    if (detailFavor) detailFavor.innerText = char.favor || 0;
+    if (detailFavorStage) {
+        detailFavorStage.innerText = favorStage.name;
+        detailFavorStage.className = `relation-stage ${favorStage.class}`;
+    }
+    if (detailLove) detailLove.innerText = char.love || 0;
+    if (detailLoveStage) {
+        detailLoveStage.innerText = loveStage.name;
+        detailLoveStage.className = `love-stage ${loveStage.class}`;
+    }
+    if (detailStatus) detailStatus.innerText = char.status || '健康';
+    if (detailDesc) detailDesc.innerText = char.desc || '暂无描述';
+    if (characterDetail) characterDetail.classList.remove('panel-hidden');
+    
+    // 显示/隐藏按钮
+    if (talkBtn) talkBtn.style.display = 'block';
+    if (giftBtn) giftBtn.style.display = 'block';
+    if (inviteBtn) inviteBtn.style.display = 'block';
+    
+    if (char.canLove) {
+        if (char.relationship === 'married') {
+            if (confessBtn) confessBtn.style.display = 'none';
+            if (divorceBtn) divorceBtn.style.display = 'block';
+        } else if (char.relationship === 'dating') {
+            if (confessBtn) confessBtn.style.display = 'none';
+            if (divorceBtn) divorceBtn.style.display = 'block';
+        } else {
+            if (confessBtn) confessBtn.style.display = 'block';
+            if (divorceBtn) divorceBtn.style.display = 'none';
+        }
+    } else {
+        if (confessBtn) confessBtn.style.display = 'none';
+        if (divorceBtn) divorceBtn.style.display = 'none';
+    }
+    
+    if (backFromChatBtn) backFromChatBtn.style.display = 'none';
+    if (chatInterface) chatInterface.style.display = 'none';
+    if (invitePanel) invitePanel.style.display = 'none';
+    
+    renderCharacters();
+}
+
+// ==================== 下一回合（增强版）====================
+function nextTurn() {
+    if (isApiCalling || gameOver) {
+        alert('无法进行下一回合');
+        return;
+    }
+    
+    currentState.week++;
+    todayExplored = {};
+    currentState.turnActions = [];
+    currentState.inviteRemaining = 2;
+    
+    // 检查节日
+    const festival = checkFestival(currentState.week);
+    if (festival) {
+        triggerFestival(festival);
+    }
+    
+    // 生成随机NPC事件
+    generateRandomNPC();
+    
+    // 检查吃醋事件
+    checkJealousy();
+    
+    // NPC关系演化
+    evolveNPCRelationships();
+    
+    // 更新年龄
+    updateAge();
+    
+    const newSeason = getSeasonFromWeek(currentState.week);
+    gameHint.innerText = `进入${newSeason}`;
+    
+    // 季节变化影响
+    const season = getSeasonType(currentState.week);
+    if (season === 'spring') {
+        storyDisplay.innerHTML = '<p>春天来了，寨子里到处充满生机。</p>';
+    } else if (season === 'summer') {
+        storyDisplay.innerHTML = '<p>夏天到了，天气渐渐热了起来。</p>';
+    } else if (season === 'autumn') {
+        storyDisplay.innerHTML = '<p>秋天是收获的季节，寨子里开始准备秋收。</p>';
+    } else {
+        storyDisplay.innerHTML = '<p>冬天降临，寨子里的人们开始准备过冬。</p>';
+    }
+    
+    // 检查游戏是否结束
+    if (gameOver) return;
+    
+    renderMap();
+    refreshUI();
+    drawRelationNetwork();
+    
+    // 自动存档
+    if (autoSaveMode && autoSaveMode.value === 'true') {
+        saveGame();
+    }
+    }// ==================== 绘制关系网络图 ====================
+        function drawRelationNetwork() {
+            if (!networkCanvas) return;
+            
+            const ctx = networkCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 450, 300);
+            
+            // 获取所有活着的NPC
+            const livingChars = Object.keys(currentState.characters).filter(name => 
+                currentState.characters[name].status !== '已故'
+            );
+            
+            // 计算节点位置（圆形布局）
+            const centerX = 225;
+            const centerY = 150;
+            const radius = 100;
+            
+            const nodes = [{ name: '你', x: centerX, y: 50, color: '#96734a' }];
+            
+            livingChars.forEach((name, index) => {
+                const angle = (index / livingChars.length) * 2 * Math.PI;
+                nodes.push({
+                    name: name,
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle),
+                    color: '#264e38'
+                });
+            });
+            
+            // 绘制连线
+            // 玩家与NPC的关系
+            nodes.slice(1).forEach(node => {
+                const char = currentState.characters[node.name];
+                if (char) {
+                    const relation = getRelationBetween(char.favor, char.love || 0, char.canLove, char.relationship);
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[0].x, nodes[0].y);
+                    ctx.lineTo(node.x, node.y);
+                    
+                    if (relation === '夫妻' || relation === '恋人') {
+                        ctx.strokeStyle = '#d4af37';
+                        ctx.lineWidth = 4;
+                    } else if (relation === '暧昧对象') {
+                        ctx.strokeStyle = '#b45fb4';
+                        ctx.lineWidth = 3;
+                    } else if (relation === '挚友') {
+                        ctx.strokeStyle = '#2d4d6e';
+                        ctx.lineWidth = 3;
+                    } else {
+                        ctx.strokeStyle = '#a4824e';
+                        ctx.lineWidth = 2;
+                    }
+                    
+                    ctx.stroke();
+                }
+            });
+            
+            // 绘制NPC之间的关系
+            if (currentState.npcRelations) {
+                ctx.strokeStyle = '#6b4d6b';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([5, 3]);
+                
+                for (let i = 1; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const npc1 = nodes[i].name;
+                        const npc2 = nodes[j].name;
+                        
+                        if (currentState.npcRelations[npc1] && currentState.npcRelations[npc1][npc2]) {
+                            const relationValue = currentState.npcRelations[npc1][npc2];
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(nodes[i].x, nodes[i].y);
+                            ctx.lineTo(nodes[j].x, nodes[j].y);
+                            
+                            if (relationValue >= 50) {
+                                ctx.strokeStyle = '#2d5a2d';
+                            } else if (relationValue <= -30) {
+                                ctx.strokeStyle = '#8b0000';
+                            } else {
+                                ctx.strokeStyle = '#6b4d6b';
+                            }
+                            
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            
+            ctx.setLineDash([]);
+            
+            // 绘制节点
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.fill();
+                ctx.strokeStyle = '#dbb063';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#f8d58c';
+                ctx.font = '12px "Segoe UI"';
+                ctx.textAlign = 'center';
+                ctx.fillText(node.name, node.x, node.y - 25);
+            });
+        }
+
+        // ==================== 刷新UI ====================
+        function refreshUI() {
+            const stats = calculateStats();
+            if (statCha) statCha.innerText = stats.cha;
+            if (statWis) statWis.innerText = stats.wis;
+            if (statPhys) statPhys.innerText = stats.phys;
+            if (statArt) statArt.innerText = stats.art;
+            if (statHp) statHp.innerText = stats.hp;
+            if (statMind) statMind.innerText = currentState.mind;
+            if (statMoney) statMoney.innerText = currentState.money;
+            
+            const season = getSeasonFromWeek(currentState.week);
+            if (weekDisplay) weekDisplay.innerText = `${season}·第${currentState.week}周`;
+            if (locationDisplay) locationDisplay.innerText = currentState.location;
+            if (playerNameDisplay) playerNameDisplay.innerText = currentState.playerName;
+            if (playerAge) playerAge.innerText = `${currentState.playerAge}岁`;
+            
+            if (playerTags) {
+                playerTags.innerHTML = currentState.traitNames.map(t => `#${t}`).join(' ');
+            }
+            
+            renderCharacters();
+            renderItems();
+            drawRelationNetwork();
+        }
+
+        // ==================== 渲染物品 ====================
+        function renderItems() {
+            if (!itemsGrid) return;
+            itemsGrid.innerHTML = `
+                <div class="item-card">贝币<br>💰 ${currentState.money || 0}</div>
+                <div class="item-card">糯米糕<br>🍚 ${currentState.items.ricecake || 0}</div>
+                <div class="item-card">绣线<br>🧵 ${currentState.items.thread || 0}</div>
+                <div class="item-card">银镯<br>✨ ${currentState.items.silver || 0}</div>
+                <div class="item-card">草药<br>🌿 ${currentState.items.herb || 0}</div>
+                <div class="item-card">竹笋<br>🎋 ${currentState.items.bamboo || 0}</div>
+                <div class="item-card">布料<br>🧶 ${currentState.items.cloth || 0}</div>
+            `;
+        }
+
+        // ==================== 渲染选项按钮 ====================
+        function renderChoiceButtons(buttonLabels) {
+            if (!choiceButtonsDiv) return;
+            choiceButtonsDiv.innerHTML = '';
+            if (!buttonLabels || buttonLabels.length === 0) {
+                buttonLabels = ['🌽 赶场', '🎵 芦笙', '🛏️ 帮阿妈'];
+            }
+            buttonLabels.forEach(label => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = label;
+                btn.addEventListener('click', () => {
+                    if (isApiCalling || inChatMode || inInviteMode || gameOver) return;
+                    handleMainAction(label);
+                });
+                choiceButtonsDiv.appendChild(btn);
+            });
+        }
+
+        // ==================== 处理主要行动 - 使用AI生成剧情 ====================
+        async function handleMainAction(action) {
+            if (gameOver) return;
+            
+            isApiCalling = true;
+            currentState.turnActions.push(action);
+            
+            apiMessageSpan.innerText = '🤔 AI思考中...';
+            apiSpinner.style.display = 'inline-block';
+            
+            // 构建上下文
+            const stats = calculateStats();
+            const season = getSeasonFromWeek(currentState.week);
+            const recentContext = currentState.storyContext.slice(-3).map(ctx => {
+                if (ctx.type === 'action') return `之前你选择了：${ctx.action}，发生了：${ctx.story.substring(0, 50)}...`;
+                return '';
+            }).join('\n');
+            
+            // 构建提示词
+            const prompt = `你是一位文笔优美的苗族故事创作者，正在创作一个关于苗疆少女${currentState.playerName}的故事。
+
+当前时间：${season}·第${currentState.week}周
+主角年龄：${currentState.playerAge}岁
+主角属性：魅力${stats.cha}、智慧${stats.wis}、体魄${stats.phys}、才艺${stats.art}
+当前地点：${currentState.location}
+
+世界观设定：${currentState.settings.worldSetting}
+
+最近发生的事情：
+${recentContext}
+
+玩家刚刚选择了行动：${action}
+
+请根据以上背景，用优美细腻的文笔描写接下来发生的剧情。要求：
+1. 以第二人称"你"的视角描写
+2. 描写要生动具体，包含环境描写、人物对话、心理活动
+3. 剧情要合理且有趣
+4. 最后给出3-5个后续可选的行动选项，用【】括起来，例如【去集市逛逛】【找彩聊天】【回家休息】
+
+请直接开始描写剧情：`;
+
+            try {
+                if (currentState.settings.apiMode === 'local') {
+                    // 本地模拟模式 - 生成随机剧情
+                    await simulateLocalStory(action);
+                } else {
+                    // 真实API模式
+                    await callRealAPI(prompt, 'action');
+                }
+            } catch (error) {
+                console.error('AI生成失败:', error);
+                // 降级到本地模拟
+                await simulateLocalStory(action);
+            }
+            
+            isApiCalling = false;
+            apiSpinner.style.display = 'none';
+            refreshUI();
+        }
+
+        // ==================== 本地模拟剧情生成（备用）====================
+        async function simulateLocalStory(action) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    let storyAddition = '';
+                    let newChoices = [];
+
+                    // 根据当前状态随机生成剧情
+                    const randomEvents = [
+                        '你走在寨子里的青石板路上，阳光透过树叶洒下斑驳的光影。',
+                        '山间的风吹过，带来远方的花香和鸟鸣。',
+                        '寨子里的老人们围坐在榕树下，说着年轻时的故事。',
+                        '溪边的水车吱呀吱呀地转着，仿佛在诉说着岁月的故事。'
+                    ];
+
+                    if (action.includes('赶场')) {
+                        storyAddition = `你来到集市，这里人声鼎沸。卖山货的阿婆热情地招呼你，铁匠铺里叮叮当当响个不停。${randomEvents[Math.floor(Math.random() * randomEvents.length)]}`;
+                        newChoices = ['💬 和彩聊天', '🎁 买绣线', '🌿 帮阿婆', '🍚 买糯米糕'];
+                        currentState.money -= 2;
+                        currentState.items.ricecake = (currentState.items.ricecake || 0) + 1;
+                        
+                    } else if (action.includes('芦笙')) {
+                        storyAddition = `榕树下传来悠扬的芦笙声。姜央站在人群中央，吹奏得格外动听。${randomEvents[Math.floor(Math.random() * randomEvents.length)]}`;
+                        newChoices = ['🏅 上前比试', '💧 在旁边观看', '🍠 买烤红薯', '👀 看姜央'];
+                        currentState.baseArt += 2;
+                        
+                    } else if (action.includes('帮阿妈')) {
+                        storyAddition = `你帮阿妈染布，蓝靛的香味弥漫在屋子里。阿妈教了你新的绣法。${randomEvents[Math.floor(Math.random() * randomEvents.length)]}`;
+                        newChoices = ['🌸 试戴银饰', '🍲 帮做饭', '🪡 继续学', '💬 听故事'];
+                        currentState.baseArt += 3;
+                        currentState.mind += 5;
+                        currentState.characters['阿妈'].favor = Math.min(100, currentState.characters['阿妈'].favor + 3);
+                        
+                    } else {
+                        storyAddition = `你${action}。${randomEvents[Math.floor(Math.random() * randomEvents.length)]}`;
+                        newChoices = ['🌾 继续', '🗣️ 聊天', '🏡 回家', '🌿 上山'];
+                        currentState.baseCha += 1;
+                    }
+
+                    if (storyDisplay) {
+                        storyDisplay.innerHTML = `<p>${storyAddition}</p>`;
+                    }
+
+                    renderChoiceButtons(newChoices);
+                    currentState.storyContext.push({
+                        type: 'action',
+                        action: action,
+                        story: storyAddition
+                    });
+                    
+                    apiMessageSpan.innerText = '✅ 完成';
+                    resolve();
+                }, 800);
+            });
+        }
+
+        // ==================== 调用真实API生成剧情 ====================
+        async function callRealAPI(prompt, type = 'action') {
+            if (abortController) {
+                abortController.abort();
+            }
+            abortController = new AbortController();
+
+            const settings = currentState.settings;
+            const apiKey = settings.apiKey;
+            const temperature = parseFloat(settings.temperature || 0.7);
+            const streaming = settings.streaming === 'true';
+
+            try {
+                if (streaming && streamingContent) {
+                    streamingContent.classList.add('active');
+                    streamingContent.innerHTML = '';
+                }
+
+                let fullResponse = '';
+
+                if (settings.apiMode === 'deepseek') {
+                    // DeepSeek API调用
+                    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: settings.selectedModel || 'deepseek-chat',
+                            messages: [{ role: 'user', content: prompt }],
+                            temperature: temperature,
+                            stream: streaming
+                        }),
+                        signal: abortController.signal
+                    });
+
+                    if (streaming) {
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+                            
+                            const chunk = decoder.decode(value);
+                            const lines = chunk.split('\n');
+                            
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    const data = line.slice(6);
+                                    if (data === '[DONE]') continue;
+                                    
+                                    try {
+                                        const parsed = JSON.parse(data);
+                                        const content = parsed.choices[0]?.delta?.content || '';
+                                        if (content) {
+                                            streamingContent.innerHTML += content;
+                                            streamingContent.scrollTop = streamingContent.scrollHeight;
+                                            fullResponse += content;
+                                        }
+                                    } catch (e) {}
+                                }
+                            }
+                        }
+                    } else {
+                        const data = await response.json();
+                        fullResponse = data.choices[0]?.message?.content || '';
+                    }
+                } else if (settings.apiMode === 'gemini') {
+                    // Gemini API调用
+                    const response = await fetch(`${settings.apiUrl}?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: prompt }]
+                            }],
+                            generationConfig: {
+                                temperature: temperature
+                            }
+                        }),
+                        signal: abortController.signal
+                    });
+
+                    const data = await response.json();
+                    fullResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    
+                    if (streaming && streamingContent) {
+                        streamingContent.classList.add('active');
+                        streamingContent.innerHTML = fullResponse;
+                    }
+                } else {
+                    // 模拟API（用于测试）
+                    await simulateLocalStory('测试剧情');
+                    return;
+                }
+
+                // 处理AI响应
+                if (fullResponse) {
+                    // 提取选项（用【】括起来的部分）
+                    const options = fullResponse.match(/【(.*?)】/g) || [];
+                    const cleanResponse = fullResponse.replace(/【.*?】/g, '').trim();
+                    
+                    if (storyDisplay) {
+                        storyDisplay.innerHTML = `<p>${cleanResponse.replace(/\n/g, '<br>')}</p>`;
+                    }
+                    
+                    if (options.length > 0) {
+                        renderChoiceButtons(options.map(opt => opt.replace(/[【】]/g, '')));
+                    } else {
+                        // 如果没有提取到选项，使用默认选项
+                        renderChoiceButtons(['🌾 继续', '🗣️ 聊天', '🏡 回家']);
+                    }
+                    
+                    currentState.storyContext.push({
+                        type: 'action',
+                        action: prompt.split('玩家刚刚选择了行动：')[1] || '未知行动',
+                        story: cleanResponse
+                    });
+                    
+                    currentState.lastAIResponse = cleanResponse;
+                }
+
+                if (streamingContent) {
+                    setTimeout(() => {
+                        streamingContent.classList.remove('active');
+                    }, 3000);
+                }
+
+                apiMessageSpan.innerText = '✅ 生成完成';
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.log('请求被取消');
+                } else {
+                    console.error('API错误:', error);
+                    apiMessageSpan.innerText = '❌ 生成失败，使用本地模式';
+                    await simulateLocalStory('本地剧情');
+                }
+            } finally {
+                abortController = null;
+            }
+        }
+
+        // ==================== 自由输入 ====================
+        if (freeSubmit) {
+            freeSubmit.addEventListener('click', () => {
+                if (gameOver) return;
+                const custom = freeInput.value.trim();
+                if (custom === '') {
+                    alert('请输入你想做的事');
+                    return;
+                }
+                handleMainAction(custom);
+                freeInput.value = '';
+            });
+        }
+
+        // ==================== 进入/退出游戏 ====================
+        function enterGame() {
+            entryPortal.style.display = 'none';
+            gameMain.style.display = 'block';
+            resetGame();
+        }
+
+        function backToEntry() {
+            if (abortController) {
+                abortController.abort();
+            }
+            if (autoSaveMode && autoSaveMode.value === 'true') {
+                saveGame();
+            }
+            gameMain.style.display = 'none';
+            entryPortal.style.display = 'block';
+        }
+
+        // ==================== 标签切换 ====================
+        tabItems.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                if (inChatMode) exitChatMode();
+                if (inInviteMode) exitInviteMode();
+                if (divorcePanel) divorcePanel.style.display = 'none';
+                
+                tabItems.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                storyPanel.classList.add('panel-hidden');
+                relationPanel.classList.add('panel-hidden');
+                networkPanel.classList.add('panel-hidden');
+                mapPanel.classList.add('panel-hidden');
+                itemsPanel.classList.add('panel-hidden');
+                settingsPanel.classList.add('panel-hidden');
+                
+                const tabName = tab.dataset.tab;
+                if (tabName === 'story') storyPanel.classList.remove('panel-hidden');
+                else if (tabName === 'relation') {
+                    relationPanel.classList.remove('panel-hidden');
+                    renderCharacters();
+                }
+                else if (tabName === 'network') {
+                    networkPanel.classList.remove('panel-hidden');
+                    drawRelationNetwork();
+                }
+                else if (tabName === 'map') {
+                    mapPanel.classList.remove('panel-hidden');
+                    renderMap();
+                }
+                else if (tabName === 'items') {
+                    itemsPanel.classList.remove('panel-hidden');
+                    renderItems();
+                }
+                else if (tabName === 'settings') settingsPanel.classList.remove('panel-hidden');
+            });
+        });
+
+        // ==================== 事件绑定 ====================
+        enterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            enterGame();
+        });
+
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            backToEntry();
+        });
+
+        restartBtn.addEventListener('click', () => {
+            if (isApiCalling) {
+                if (abortController) abortController.abort();
+            }
+            resetGame();
+        });
+
+        nextTurnBtn.addEventListener('click', nextTurn);
+        
+        saveBtn.addEventListener('click', () => {
+            if (saveGame()) {
+                showNotification('✅ 手动存档成功');
+            }
+        });
+
+        talkBtn.addEventListener('click', enterChatMode);
+        giftBtn.addEventListener('click', () => {
+            enterChatMode();
+            openGiftBackpack();
+        });
+        inviteBtn.addEventListener('click', showInvitePanel);
+        confessBtn.addEventListener('click', () => {
+            if (selectedCharacter) confessTo(selectedCharacter);
+        });
+        divorceBtn.addEventListener('click', showDivorcePanel);
+        confirmDivorceBtn.addEventListener('click', confirmDivorce);
+        cancelDivorceBtn.addEventListener('click', hideDivorcePanel);
+        backFromChatBtn.addEventListener('click', () => {
+            exitChatMode();
+            if (selectedCharacter) selectCharacter(selectedCharacter);
+        });
+        confirmInviteBtn.addEventListener('click', confirmInvite);
+        sendChatBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+        confirmGiftBtn.addEventListener('click', confirmGift);
+
+        // ==================== 保存设置 ====================
+        saveSettings.addEventListener('click', () => {
+            currentState.playerName = playerName.value || '阿苗';
+            currentState.settings = {
+                apiMode: apiMode.value,
+                apiKey: apiKey.value,
+                apiUrl: apiUrl.value,
+                selectedModel: modelSelect.value,
+                temperature: aiTemperature.value,
+                streaming: streamingMode.value === 'true',
+                autoSave: autoSaveMode.value === 'true',
+                worldSetting: worldSetting.value
+            };
+            playerNameDisplay.innerText = currentState.playerName;
+            showNotification('✅ 设置已保存');
+        });
+
+        // ==================== 初始化 ====================
+        entryPortal.style.display = 'block';
+        gameMain.style.display = 'none';
+        initMap();
+
+        // 导出resetGame供全局使用
+        window.resetGame = resetGame;
+    })();
+</script>
+</body>
+</html>
