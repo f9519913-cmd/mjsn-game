@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>苗疆 · 蜉蝣 | 接API文游</title>
+    <style>
+        /* 全局沉浸风格 - 优化手机显示 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #1d2b35;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', '华文楷体', 'KaiTi', 'Microsoft YaHei', serif;
+            padding: 10px;
+            background-image: radial-gradient(circle at 30% 30%, #2f4b3c 0%, #10221b 100%);
+            font-size: 14px;
+        }
+
+        /* ----- 独立链接入口 ----- */
+        .entry-portal {
+            text-align: center;
+            background: rgba(240, 235, 215, 0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid #b69e7c;
+            border-radius: 40px 40px 20px 20px;
+            padding: 2rem 2rem;
+            box-shadow: 0 30px 40px #00000060, 0 0 0 2px #5f7b68 inset;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .entry-portal h1 {
+            font-size: 2.5rem;
+            color: #fbefcf;
+            text-shadow: 0 4px 0 #3d523c, 0 8px 8px #0a0f0a;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+        }
+
+        .entry-portal p {
+            font-size: 1.1rem;
+            color: #dcd0b3;
+            margin-bottom: 30px;
+        }
+
+        .enter-game-link {
+            display: inline-block;
+            background: linear-gradient(145deg, #ebc47f, #c89f4a);
+            color: #17281f;
+            font-size: 1.8rem;
+            font-weight: bold;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 10px 0 #7a6138, 0 10px 20px black;
+            border: 2px solid #ffeec2;
+            cursor: pointer;
+        }
+
+        /* ----- 游戏主界面 ----- */
+        .game-main {
+            max-width: 500px;
+            width: 100%;
+            background: #1d382bc0;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: 30px 30px 20px 20px;
+            padding: 15px;
+            border: 2px solid #b39260;
+            box-shadow: 0 20px 30px #000000b0;
+            color: #f4ecd9;
+            display: none;
+            position: relative;
+        }
+
+        /* 存档按钮 - 右上角 */
+        .save-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #96734a;
+            border: 2px solid #dbb063;
+            color: #faf0ce;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .save-btn:hover {
+            background: #b58f5f;
+            transform: scale(1.05);
+        }
+
+        .save-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #264e38;
+            border: 2px solid #dbb063;
+            color: #f8d58c;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            animation: slideDown 0.3s, fadeOut 0.3s 2.7s;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes slideDown {
+            from { top: -50px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* 头部 */
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #a98f5f;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            padding-right: 40px; /* 为存档按钮留空间 */
+        }
+
+        .game-title {
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #f7e1a4, #e7b86b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .player-tags {
+            font-size: 0.7rem;
+            color: #f8b56c;
+            background: #264e38;
+            padding: 2px 6px;
+            border-radius: 15px;
+            display: inline-flex;
+            gap: 3px;
+        }
+
+        .api-badge {
+            background: #1f4030;
+            padding: 5px 12px;
+            border-radius: 30px;
+            border: 1px solid #efc48c;
+            color: #fbddb5;
+            font-size: 0.8rem;
+        }
+
+        /* 属性栏 */
+        .stats-panel {
+            background: #103326d0;
+            border-radius: 20px;
+            padding: 10px;
+            border: 1px solid #baa06a;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: #08211460;
+            border-radius: 20px;
+            padding: 3px 6px;
+            border-left: 2px solid #a57c4b;
+        }
+
+        .stat-label {
+            color: #e5ca92;
+            min-width: 30px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #f2e0b5;
+        }
+
+        .time-loc {
+            grid-column: span 4;
+            display: flex;
+            justify-content: space-between;
+            color: #ffddaa;
+            background: #08211460;
+            border-radius: 20px;
+            padding: 5px 10px;
+        }
+
+        /* 故事区 */
+        .story-narrative {
+            background: #102d1dd9;
+            border-radius: 20px;
+            padding: 18px;
+            margin: 8px 0;
+            border: 1px solid #caae77;
+            font-size: 1rem;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: inset 0 0 20px #00000040;
+            color: #f0e6d2;
+        }
+
+        .story-narrative p {
+            margin-bottom: 12px;
+        }
+
+        .story-narrative .inner-thought {
+            color: #f8d58c;
+            font-style: italic;
+            border-left: 4px solid #a7763d;
+            padding-left: 15px;
+            margin: 15px 0;
+        }
+
+        /* 标签导航栏 */
+        .tab-nav {
+            display: flex;
+            background: #1b3427e0;
+            border-radius: 30px;
+            padding: 5px;
+            margin: 8px 0;
+            border: 1px solid #a4824e;
+            justify-content: space-around;
+        }
+
+        .tab-item {
+            color: #e5ca92;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            flex: 1;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-item.active {
+            background: #264e38;
+            color: #f8d58c;
+            border: 1px solid #dbb063;
+        }
+
+        /* 内容面板 */
+        .content-panel {
+            background: #1b3427e0;
+            border-radius: 20px;
+            padding: 12px;
+            border: 1px solid #a4824e;
+            margin: 8px 0;
+            min-height: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .panel-hidden {
+            display: none;
+        }
+
+        /* 人际关系 - 人物卡片 */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .character-card {
+            background: #08211460;
+            border-radius: 15px;
+            padding: 8px;
+            border: 1px solid #a57c4b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .character-card:hover {
+            background: #264e38;
+            border-color: #f8d58c;
+        }
+
+        .character-card.selected {
+            border: 2px solid #f8d58c;
+            background: #264e38;
+        }
+
+        .character-card.dead {
+            opacity: 0.5;
+            filter: grayscale(1);
+            pointer-events: none;
+        }
+
+        .character-name {
+            color: #f8d58c;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .character-relation-badge {
+            font-size: 0.65rem;
+            color: #f8b56c;
+            background: #1a3a2a;
+            padding: 2px 6px;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 2px 0;
+        }
+
+        .character-relation {
+            font-size: 0.7rem;
+            color: #e5ca92;
+            margin: 2px 0;
+        }
+
+        .character-detail {
+            margin-top: 10px;
+            padding: 12px;
+            background: #103326d0;
+            border-radius: 15px;
+            border: 1px solid #a57c4b;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 6px 0;
+            font-size: 0.9rem;
+            border-bottom: 1px dashed #a57c4b;
+            padding-bottom: 4px;
+        }
+
+        .detail-label {
+            color: #e5ca92;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #f8d58c;
+            text-align: right;
+        }
+
+        .detail-desc {
+            margin-top: 8px;
+            padding: 8px;
+            background: #08211460;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #ffddaf;
+            line-height: 1.4;
+        }
