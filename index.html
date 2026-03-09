@@ -1381,8 +1381,8 @@ ${Object.entries(currentState.characters)
     .filter(([_, c]) => c.status === '健康')
     .map(([name, c]) => {
         let relation = `${name}（${c.role}，性格${c.personality}）`;
-        relation += `\n  - 好感度：${c.favor}（${getFavorStage(c.favor).name}）`;
-        if (c.canLove) relation += `，爱慕值：${c.love}（${getLoveStage(c.love).name}）`;
+        relation += `\n  - 好感度：${c.favor}
+- 爱慕值：${c.love};
         if (c.relationship !== 'none') relation += `，关系：${c.relationship === 'dating' ? '恋爱中' : c.relationship === 'married' ? '已婚' : ''}`;
         return relation;
     })
