@@ -382,4 +382,1268 @@
             font-size: 0.85rem;
             color: #ffddaf;
             line-height: 1.4;
+        }.relation-stage, .love-stage {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 5px;
         }
+
+        .stage-hostile { background: #8b0000; color: #ffcccc; }
+        .stage-stranger { background: #4a4a4a; color: #e0e0e0; }
+        .stage-familiar { background: #2d5a2d; color: #ccffcc; }
+        .stage-friend { background: #2d4d6e; color: #cce5ff; }
+        .stage-close { background: #6b4d6b; color: #ffccff; }
+
+        .love-hate { background: #8b0000; color: #ffcccc; }
+        .love-stranger { background: #4a4a4a; color: #e0e0e0; }
+        .love-crush { background: #b45f5f; color: #ffe6e6; }
+        .love-dating { background: #b45fb4; color: #ffe6ff; }
+        .love-forever { background: #d4af37; color: #ffffe6; }
+
+        .status-dead {
+            opacity: 0.5;
+            filter: grayscale(1);
+            pointer-events: none;
+        }
+
+        .death-message {
+            background: #330000;
+            border: 2px solid #8b0000;
+            color: #ffaaaa;
+            padding: 20px;
+            text-align: center;
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+
+        /* 关系网络图 */
+        .relation-network {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 15px;
+            min-height: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #networkCanvas {
+            width: 100%;
+            height: 300px;
+            background: #0e281d;
+            border-radius: 10px;
+        }
+
+        /* 邀请面板 */
+        .invite-panel {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .invite-counter {
+            color: #f8d58c;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .location-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .location-btn {
+            background: #264e38;
+            border: 1px solid #dbb063;
+            color: #ffefcf;
+            padding: 6px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .location-btn.selected {
+            background: #96734a;
+            border-color: #f8d58c;
+        }
+
+        /* 随机NPC */
+        .random-npc {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 12px;
+            margin: 10px 0;
+            animation: fadeIn 0.5s;
+            border-left: 4px solid #d4af37;
+        }
+
+        /* 节日事件 */
+        .festival-event {
+            background: #d4af37;
+            color: #1d2b35;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 10px 0;
+            font-weight: bold;
+            animation: pulse 1s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        /* 吃醋事件 */
+        .jealousy-event {
+            background: #b45f5f;
+            color: #1d2b35;
+            border-radius: 15px;
+            padding: 12px;
+            margin: 10px 0;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 离婚面板 */
+        .divorce-panel {
+            background: #330000;
+            border: 2px solid #8b0000;
+            border-radius: 15px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .warning-text {
+            color: #ffaaaa;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        /* 聊天界面 */
+        .chat-interface {
+            background: #0e281dd0;
+            border-radius: 20px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid #b39260;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #a4824e;
+        }
+
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #264e38;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            border: 2px solid #dbb063;
+        }
+
+        .chat-title {
+            flex: 1;
+        }
+
+        .chat-name {
+            font-size: 1.2rem;
+            color: #f8d58c;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .chat-status {
+            font-size: 0.8rem;
+            color: #e5ca92;
+        }
+
+        .chat-messages {
+            background: #0a1f15;
+            border-radius: 15px;
+            padding: 12px;
+            min-height: 150px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            border: 1px solid #a4824e;
+        }
+
+        .message-left {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .message-left .bubble {
+            background: #1f4030;
+            padding: 8px 12px;
+            border-radius: 18px 18px 18px 4px;
+            max-width: 80%;
+            color: #f0e6d2;
+        }
+
+        .message-right {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .message-right .bubble {
+            background: #264e38;
+            padding: 8px 12px;
+            border-radius: 18px 18px 4px 18px;
+            max-width: 80%;
+            color: #f8d58c;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #0e281d;
+            border: 1px solid #b39260;
+            border-radius: 25px;
+            padding: 10px 15px;
+            color: #f4ecd9;
+            font-size: 0.9rem;
+        }
+
+        .chat-send {
+            background: #96734a;
+            border: none;
+            color: #faf0ce;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 背包物品列表 */
+        .backpack-panel {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #b39260;
+        }
+
+        .backpack-header {
+            display: flex;
+            justify-content: space-between;
+            color: #f8d58c;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed #a4824e;
+        }
+
+        .backpack-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .backpack-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1a3a2a;
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid #a57c4b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .backpack-item:hover {
+            background: #264e38;
+            border-color: #f8d58c;
+        }
+
+        .backpack-item.selected {
+            background: #3a7054;
+            border: 2px solid #f8d58c;
+        }
+
+        .item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #0e281d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 1px solid #b3915a;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            color: #f8d58c;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .item-desc {
+            color: #e5ca92;
+            font-size: 0.75rem;
+        }
+
+        .item-count {
+            color: #ffddaf;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .empty-backpack {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* 地图网格 */
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .map-cell {
+            background: #264e38;
+            border: 1px solid #dbb063;
+            border-radius: 15px;
+            padding: 12px 5px;
+            text-align: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .map-cell.explored {
+            background: #3a7054;
+            border-color: #f8d58c;
+        }
+
+        .map-cell.event-triggered {
+            background: #96734a;
+            animation: pulse 1s;
+        }
+
+        .map-cell.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .map-cell.spring::after {
+            content: "🌸";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+        }
+
+        .map-cell.summer::after {
+            content: "☀️";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+        }
+
+        .map-cell.autumn::after {
+            content: "🍁";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+        }
+
+        .map-cell.winter::after {
+            content: "❄️";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+        }
+
+        .map-legend {
+            display: flex;
+            gap: 10px;
+            font-size: 0.7rem;
+            color: #e5ca92;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .map-event-choices {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .map-event-btn {
+            background: #264e38;
+            border: 2px solid #dbb063;
+            color: #ffefcf;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        /* 物品列表 */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .item-card {
+            background: #264e38;
+            border: 1px solid #b3915a;
+            border-radius: 15px;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        /* 设置面板 */
+        .settings-group {
+            margin-bottom: 15px;
+        }
+
+        .settings-label {
+            color: #f8d58c;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .settings-input, .settings-select {
+            width: 100%;
+            background: #103326;
+            border: 1px solid #a4824e;
+            border-radius: 15px;
+            padding: 8px 12px;
+            color: #f4ecd9;
+            margin-bottom: 10px;
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .model-selector select {
+            flex: 1;
+            background: #103326;
+            border: 1px solid #a4824e;
+            border-radius: 15px;
+            padding: 8px 12px;
+            color: #f4ecd9;
+        }
+
+        .refresh-models {
+            background: #96734a;
+            border: none;
+            color: #faf0ce;
+            padding: 8px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .settings-textarea {
+            width: 100%;
+            background: #103326;
+            border: 1px solid #a4824e;
+            border-radius: 15px;
+            padding: 8px 12px;
+            color: #f4ecd9;
+            min-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .settings-save {
+            background: #96734a;
+            border: none;
+            color: #faf0ce;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* API 指示器 */
+        .api-indicator {
+            display: flex;
+            align-items: center;
+            background: #263f30;
+            border-radius: 30px;
+            padding: 5px 15px;
+            gap: 10px;
+            border: 1px solid #dcaa5e;
+            margin: 5px 0;
+            color: #ffddaf;
+            font-size: 0.8rem;
+        }
+
+        .streaming-content {
+            background: #0e281d;
+            border-radius: 15px;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #b39260;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #f0e6d2;
+            display: none;
+        }
+
+        .streaming-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .cursor-blink {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background-color: #f8d58c;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fad68f;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
+
+        /* 选项按钮 */
+        .choice-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .choice-btn {
+            background: #264e38;
+            border: 2px solid #dbb063;
+            color: #ffefcf;
+            padding: 8px 4px;
+            font-size: 0.8rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #153a25;
+            transition: all 0.1s;
+        }
+
+        .choice-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #153a25;
+        }
+
+        .choice-btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* 自由输入 */
+        .free-input-area {
+            display: flex;
+            gap: 6px;
+            background: #1b3427e0;
+            border-radius: 30px;
+            padding: 3px 3px 3px 15px;
+            border: 2px solid #a4824e;
+            margin: 8px 0;
+        }
+
+        .free-input-area input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #f5e1b9;
+            font-size: 0.9rem;
+            outline: none;
+            padding: 6px 0;
+        }
+
+        .free-submit {
+            background: #96734a;
+            border: none;
+            color: #faf0ce;
+            font-size: 0.9rem;
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 0 #4d3e28;
+        }
+
+        .free-submit:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 0 #4d3e28;
+        }
+
+        .free-submit.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* 底部 */
+        .footer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            gap: 5px;
+        }
+
+        .back-to-entry, .restart-story {
+            background: #1f4430;
+            border: 1px solid #c2a062;
+            color: #ead5b0;
+            padding: 8px 12px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .next-turn-btn {
+            background: #96734a;
+            border: 2px solid #dbb063;
+            color: #faf0ce;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            box-shadow: 0 3px 0 #4d3e28;
+        }
+
+        .next-turn-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #4d3e28;
+        }
+
+        .hint-message {
+            color: #d5c09f;
+            font-size: 0.75rem;
+        }
+    </style>
+</head><body>
+    <!-- 独立链接入口 -->
+    <div id="entryPortal" class="entry-portal">
+        <h1>🌺 苗疆 · 蜉蝣</h1>
+        <p>—— 扮演一位少女，度过她的一生 ——</p>
+        <a href="#" id="enterGameLink" class="enter-game-link">🔍 进入寨子 🔍</a>
+        <div class="entry-footer" style="margin-top:20px; color:#b4bb9e; font-size:0.9rem;">
+            <span>🎋 存档自动保存 · 真实AI 🎋</span>
+        </div>
+    </div>
+
+    <!-- 游戏主界面 -->
+    <div id="gameMain" class="game-main">
+        <!-- 存档按钮 - 右上角 -->
+        <div id="saveBtn" class="save-btn" title="手动存档">💾</div>
+        
+        <!-- 存档提示（动态创建） -->
+        
+        <!-- 头部 -->
+        <div class="game-header">
+            <div class="game-title">
+                <span>🌱 <span id="playerNameDisplay">阿苗</span> <span id="playerAge">18岁</span></span>
+                <span id="playerTags" class="player-tags"></span>
+            </div>
+            <span class="api-badge" id="apiModeBadge">⚡ 真实AI</span>
+        </div>
+
+        <!-- 属性栏 -->
+        <div class="stats-panel" id="statsPanel">
+            <div class="time-loc">
+                <span>📆 <span id="weekDisplay">春一月·第1周</span></span>
+                <span>📍 <span id="locationDisplay">青榕寨</span></span>
+            </div>
+            <div class="stat-item"><span class="stat-label">魅</span><span class="stat-value" id="statCha">52</span></div>
+            <div class="stat-item"><span class="stat-label">智</span><span class="stat-value" id="statWis">48</span></div>
+            <div class="stat-item"><span class="stat-label">体</span><span class="stat-value" id="statPhys">55</span></div>
+            <div class="stat-item"><span class="stat-label">才</span><span class="stat-value" id="statArt">44</span></div>
+            <div class="stat-item"><span class="stat-label">❤️</span><span class="stat-value" id="statHp">100</span></div>
+            <div class="stat-item"><span class="stat-label">🧠</span><span class="stat-value" id="statMind">92</span></div>
+            <div class="stat-item"><span class="stat-label">💰</span><span class="stat-value" id="statMoney">25</span></div>
+        </div>
+
+        <!-- 故事区 -->
+        <div id="storyDisplay" class="story-narrative">
+            <p>晨雾还挂在吊脚楼角，你推开竹窗，青榕寨在鸟鸣中醒来。</p>
+        </div>
+
+        <!-- 流式输出区 -->
+        <div id="streamingContent" class="streaming-content"></div>
+
+        <!-- 标签导航栏 -->
+        <div class="tab-nav">
+            <div class="tab-item active" data-tab="story">剧情</div>
+            <div class="tab-item" data-tab="relation">人脉</div>
+            <div class="tab-item" data-tab="network">关系网</div>
+            <div class="tab-item" data-tab="map">地图</div>
+            <div class="tab-item" data-tab="items">资产</div>
+            <div class="tab-item" data-tab="settings">设置</div>
+        </div>
+
+        <!-- 剧情面板 -->
+        <div id="storyPanel" class="content-panel">
+            <div id="storyContent">
+                <p>晨雾还挂在吊脚楼角，你推开竹窗，青榕寨在鸟鸣中醒来。阿妈在火塘边蒸糯米，香气混着柴烟钻进鼻腔。</p>
+                <p>你今年18岁了，山脚榕树下，年轻人们正在扎堆，似乎要比试芦笙。</p>
+            </div>
+        </div>
+
+        <!-- 人际关系面板 -->
+        <div id="relationPanel" class="content-panel panel-hidden">
+            <div class="character-grid" id="characterGrid"></div>
+            <div id="characterDetail" class="character-detail panel-hidden">
+                <div class="detail-row"><span class="detail-label">姓名</span><span class="detail-value" id="detailName">阿妈</span></div>
+                <div class="detail-row"><span class="detail-label">年龄</span><span class="detail-value" id="detailAge">45</span></div>
+                <div class="detail-row"><span class="detail-label">身份</span><span class="detail-value" id="detailRole">母亲</span></div>
+                <div class="detail-row"><span class="detail-label">性格</span><span class="detail-value" id="detailPersonality">慈祥温和</span></div>
+                <div class="detail-row"><span class="detail-label">外貌</span><span class="detail-value" id="detailAppearance">头发花白，面容和善</span></div>
+                <div class="detail-row"><span class="detail-label">当前关系</span><span class="detail-value" id="detailRelationStage">挚友</span></div>
+                <div class="detail-row"><span class="detail-label">好感度</span><span class="detail-value" id="detailFavor">80</span></div>
+                <div class="detail-row"><span class="detail-label">好感阶段</span><span class="detail-value" id="detailFavorStage">挚友</span></div>
+                <div class="detail-row"><span class="detail-label">爱慕值</span><span class="detail-value" id="detailLove">0</span></div>
+                <div class="detail-row"><span class="detail-label">爱慕阶段</span><span class="detail-value" id="detailLoveStage">陌生</span></div>
+                <div class="detail-row"><span class="detail-label">当前状态</span><span class="detail-value" id="detailStatus">健康</span></div>
+                <div class="detail-desc" id="detailDesc">你的母亲，从小把你抚养长大，精通染布和刺绣。</div>
+                <div style="display:flex; gap:5px; margin-top:8px; flex-wrap:wrap;">
+                    <button class="choice-btn" style="flex:1;" id="talkBtn">聊天</button>
+                    <button class="choice-btn" style="flex:1;" id="giftBtn">送礼</button>
+                    <button class="choice-btn" style="flex:1;" id="inviteBtn">邀请</button>
+                    <button class="choice-btn" style="flex:1;" id="confessBtn">表白</button>
+                    <button class="choice-btn" style="flex:1;" id="divorceBtn" style="display:none;">离婚</button>
+                    <button class="choice-btn" style="flex:1;" id="backFromChatBtn" style="display:none;">返回</button>
+                </div>
+                
+                <!-- 离婚面板 -->
+                <div id="divorcePanel" class="divorce-panel" style="display:none;">
+                    <div class="warning-text">⚠️ 确定要离婚吗？这可能影响你们的关系</div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="choice-btn" style="flex:1;" id="confirmDivorceBtn">确认离婚</button>
+                        <button class="choice-btn" style="flex:1;" id="cancelDivorceBtn">取消</button>
+                    </div>
+                </div>
+                
+                <!-- 邀请面板 -->
+                <div id="invitePanel" class="invite-panel" style="display:none;">
+                    <div class="invite-counter">本回合剩余邀请次数: <span id="inviteCount">2</span>/2</div>
+                    <div class="location-options" id="locationOptions"></div>
+                    <button class="choice-btn" id="confirmInviteBtn" style="width:100%; margin-top:5px;">确认邀请</button>
+                </div>
+                
+                <!-- 聊天界面 -->
+                <div id="chatInterface" class="chat-interface" style="display:none;">
+                    <div class="chat-header">
+                        <div class="chat-avatar" id="chatAvatar">👤</div>
+                        <div class="chat-title">
+                            <div class="chat-name" id="chatName">阿妈</div>
+                            <div class="chat-status" id="chatStatus">在线 · 好感80</div>
+                        </div>
+                    </div>
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="输入消息...">
+                        <button id="sendChatBtn" class="chat-send">发送</button>
+                    </div>
+                    
+                    <!-- 送礼背包面板 -->
+                    <div id="giftBackpack" class="backpack-panel" style="display:none;">
+                        <div class="backpack-header">
+                            <span>🎒 背包物品</span>
+                            <span id="backpackCount">0/50</span>
+                        </div>
+                        <div id="backpackItems" class="backpack-items"></div>
+                        <div id="emptyBackpackMsg" class="empty-backpack" style="display:none;">⚠️ 您背包里没有物品</div>
+                        <button id="confirmGiftBtn" class="choice-btn" style="width:100%; margin-top:10px;">确认送礼</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关系网面板 -->
+        <div id="networkPanel" class="content-panel panel-hidden">
+            <div class="relation-network">
+                <canvas id="networkCanvas" width="450" height="300"></canvas>
+            </div>
+            <div style="margin-top:10px; font-size:0.8rem; color:#e5ca92;">
+                <span>🔴 你</span> 
+                <span style="margin-left:10px;">🟢 NPC</span> 
+                <span style="margin-left:10px;">📏 粗线：亲密关系</span>
+                <span style="margin-left:10px;">虚线：NPC之间关系</span>
+            </div>
+        </div>
+
+        <!-- 地图面板 -->
+        <div id="mapPanel" class="content-panel panel-hidden">
+            <div class="map-grid" id="mapGrid"></div>
+            <div class="map-legend">
+                <span>🟩 未探索</span>
+                <span>🟨 已探索</span>
+                <span>✨ 可触发事件</span>
+                <span>🌸 春季限定</span>
+                <span>☀️ 夏季限定</span>
+                <span>🍁 秋季限定</span>
+                <span>❄️ 冬季限定</span>
+                <span>🔄 AI随机生成</span>
+            </div>
+            <div id="mapEventContainer" style="margin-top:10px;"></div>
+            <div style="margin-top:8px; font-size:0.85rem; color:#f8d58c; line-height:1.5;" id="mapMessage"></div>
+        </div>
+
+        <!-- 资产面板 -->
+        <div id="itemsPanel" class="content-panel panel-hidden">
+            <div class="items-grid" id="itemsGrid"></div>
+        </div>
+
+        <!-- 设置面板 -->
+        <div id="settingsPanel" class="content-panel panel-hidden">
+            <div class="settings-group">
+                <div class="settings-label">主角姓名</div>
+                <input type="text" id="playerName" class="settings-input" value="阿苗" placeholder="输入你的名字">
+            </div>
+            <div class="settings-group">
+                <div class="settings-label">AI模式</div>
+                <select id="apiMode" class="settings-select">
+                    <option value="local">本地模式（模拟AI）</option>
+                    <option value="deepseek">DeepSeek API</option>
+                    <option value="claude">Claude API</option>
+                    <option value="gemini">Gemini API</option>
+                    <option value="custom">自定义API</option>
+                </select>
+            </div>
+            <div class="settings-group" id="apiKeyGroup" style="display:none;">
+                <div class="settings-label">API Key</div>
+                <input type="password" id="apiKey" class="settings-input" placeholder="输入你的API Key">
+            </div>
+            <div class="settings-group" id="apiUrlGroup" style="display:none;">
+                <div class="settings-label">API 地址</div>
+                <input type="text" id="apiUrl" class="settings-input" value="https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent">
+            </div>
+            <div class="settings-group" id="modelSelectGroup" style="display:none;">
+                <div class="settings-label">选择模型</div>
+                <div class="model-selector">
+                    <select id="modelSelect">
+                        <option value="">请先获取模型列表</option>
+                    </select>
+                    <button id="refreshModels" class="refresh-models">🔄 获取</button>
+                </div>
+            </div>
+            <div class="settings-group">
+                <div class="settings-label">AI温度</div>
+                <select id="aiTemperature" class="settings-select">
+                    <option value="0.7">平衡 (0.7)</option>
+                    <option value="0.9">创意 (0.9)</option>
+                    <option value="1.0">天马行空 (1.0)</option>
+                    <option value="0.5">稳定 (0.5)</option>
+                </select>
+            </div>
+            <div class="settings-group">
+                <div class="settings-label">流式输出</div>
+                <select id="streamingMode" class="settings-select">
+                    <option value="true">开启 (实时生成)</option>
+                    <option value="false">关闭 (一次性显示)</option>
+                </select>
+            </div>
+            <div class="settings-group">
+                <div class="settings-label">自动存档</div>
+                <select id="autoSaveMode" class="settings-select">
+                    <option value="true">开启 (退出时自动保存)</option>
+                    <option value="false">关闭</option>
+                </select>
+            </div>
+            <div class="settings-group">
+                <div class="settings-label">世界观设定</div>
+                <textarea id="worldSetting" class="settings-textarea">古代苗疆，少女成长，部落寨子，自然崇拜，四季分明，有苗年、花山节、赶秋节等传统节日。随着剧情发展会结识新的NPC。</textarea>
+            </div>
+            <button id="saveSettings" class="settings-save">保存设置</button>
+        </div>
+
+        <!-- 随机NPC事件区域 -->
+        <div id="randomNPCContainer" style="margin:8px 0;"></div>
+
+        <!-- 节日事件区域 -->
+        <div id="festivalContainer" style="margin:8px 0;"></div>
+
+        <!-- 吃醋事件区域 -->
+        <div id="jealousyContainer" style="margin:8px 0;"></div>
+
+        <!-- API 指示器 -->
+        <div class="api-indicator" id="apiIndicator">
+            <span id="apiMessage">⏳ 等待指令</span>
+            <span id="apiSpinner" class="spinner" style="display: none;"></span>
+        </div>
+
+        <!-- 选项按钮 -->
+        <div id="choiceButtons" class="choice-buttons">
+            <button class="choice-btn">🌽 赶场</button>
+            <button class="choice-btn">🎵 芦笙</button>
+            <button class="choice-btn">🛏️ 帮阿妈</button>
+        </div>
+
+        <!-- 自由输入 -->
+        <div class="free-input-area">
+            <input type="text" id="freeActionInput" placeholder="✍️ 输入你想做的事...">
+            <button id="submitFreeAction" class="free-submit">召唤AI</button>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer-bar">
+            <a href="#" id="backToEntryBtn" class="back-to-entry">⏮ 返回入口</a>
+            <button id="restartGameBtn" class="restart-story">🔄 重开</button>
+            <button id="nextTurnBtn" class="next-turn-btn">⏭️ 下一回合</button>
+            <span class="hint-message" id="gameHint">苗疆深处</span>
+        </div>
+                    </div><script>
+    (function(){
+        // ==================== 元素获取函数 ====================
+        function getElement(id) {
+            return document.getElementById(id);
+        }
+
+        function showNotification(message) {
+            const notif = document.createElement('div');
+            notif.className = 'save-notification';
+            notif.innerText = message;
+            document.body.appendChild(notif);
+            setTimeout(() => {
+                notif.remove();
+            }, 3000);
+        }
+
+        // ==================== 元素获取 ====================
+        const entryPortal = getElement('entryPortal');
+        const gameMain = getElement('gameMain');
+        const enterLink = getElement('enterGameLink');
+        const backBtn = getElement('backToEntryBtn');
+        const restartBtn = getElement('restartGameBtn');
+        const nextTurnBtn = getElement('nextTurnBtn');
+        const saveBtn = getElement('saveBtn');
+
+        const storyDisplay = getElement('storyDisplay');
+        const storyContent = getElement('storyContent');
+        const streamingContent = getElement('streamingContent');
+        const choiceButtonsDiv = getElement('choiceButtons');
+        const apiMessageSpan = getElement('apiMessage');
+        const apiSpinner = getElement('apiSpinner');
+        const gameHint = getElement('gameHint');
+        const freeInput = getElement('freeActionInput');
+        const freeSubmit = getElement('submitFreeAction');
+        const apiModeBadge = getElement('apiModeBadge');
+        const playerNameDisplay = getElement('playerNameDisplay');
+        const playerAge = getElement('playerAge');
+        const playerTags = getElement('playerTags');
+
+        // 属性显示
+        const statCha = getElement('statCha');
+        const statWis = getElement('statWis');
+        const statPhys = getElement('statPhys');
+        const statArt = getElement('statArt');
+        const statHp = getElement('statHp');
+        const statMind = getElement('statMind');
+        const statMoney = getElement('statMoney');
+        const weekDisplay = getElement('weekDisplay');
+        const locationDisplay = getElement('locationDisplay');
+
+        // 标签导航
+        const tabItems = document.querySelectorAll('.tab-item');
+        const storyPanel = getElement('storyPanel');
+        const relationPanel = getElement('relationPanel');
+        const networkPanel = getElement('networkPanel');
+        const mapPanel = getElement('mapPanel');
+        const itemsPanel = getElement('itemsPanel');
+        const settingsPanel = getElement('settingsPanel');
+        const networkCanvas = getElement('networkCanvas');
+
+        // 人际关系元素
+        const characterGrid = getElement('characterGrid');
+        const characterDetail = getElement('characterDetail');
+        const detailName = getElement('detailName');
+        const detailAge = getElement('detailAge');
+        const detailRole = getElement('detailRole');
+        const detailPersonality = getElement('detailPersonality');
+        const detailAppearance = getElement('detailAppearance');
+        const detailRelationStage = getElement('detailRelationStage');
+        const detailFavor = getElement('detailFavor');
+        const detailFavorStage = getElement('detailFavorStage');
+        const detailLove = getElement('detailLove');
+        const detailLoveStage = getElement('detailLoveStage');
+        const detailStatus = getElement('detailStatus');
+        const detailDesc = getElement('detailDesc');
+        const talkBtn = getElement('talkBtn');
+        const giftBtn = getElement('giftBtn');
+        const inviteBtn = getElement('inviteBtn');
+        const confessBtn = getElement('confessBtn');
+        const divorceBtn = getElement('divorceBtn');
+        const backFromChatBtn = getElement('backFromChatBtn');
+        
+        // 离婚面板
+        const divorcePanel = getElement('divorcePanel');
+        const confirmDivorceBtn = getElement('confirmDivorceBtn');
+        const cancelDivorceBtn = getElement('cancelDivorceBtn');
+
+        // 邀请面板
+        const invitePanel = getElement('invitePanel');
+        const inviteCount = getElement('inviteCount');
+        const locationOptions = getElement('locationOptions');
+        const confirmInviteBtn = getElement('confirmInviteBtn');
+
+        // 聊天界面元素
+        const chatInterface = getElement('chatInterface');
+        const chatMessages = getElement('chatMessages');
+        const chatInput = getElement('chatInput');
+        const sendChatBtn = getElement('sendChatBtn');
+        const chatAvatar = getElement('chatAvatar');
+        const chatName = getElement('chatName');
+        const chatStatus = getElement('chatStatus');
+        const giftBackpack = getElement('giftBackpack');
+        const backpackItems = getElement('backpackItems');
+        const backpackCount = getElement('backpackCount');
+        const emptyBackpackMsg = getElement('emptyBackpackMsg');
+        const confirmGiftBtn = getElement('confirmGiftBtn');
+
+        // 地图元素
+        const mapGrid = getElement('mapGrid');
+        const mapEventContainer = getElement('mapEventContainer');
+        const mapMessage = getElement('mapMessage');
+
+        // 物品元素
+        const itemsGrid = getElement('itemsGrid');
+
+        // 随机事件容器
+        const randomNPCContainer = getElement('randomNPCContainer');
+        const festivalContainer = getElement('festivalContainer');
+        const jealousyContainer = getElement('jealousyContainer');
+
+        // 设置元素
+        const playerName = getElement('playerName');
+        const apiMode = getElement('apiMode');
+        const apiKey = getElement('apiKey');
+        const apiUrl = getElement('apiUrl');
+        const apiKeyGroup = getElement('apiKeyGroup');
+        const apiUrlGroup = getElement('apiUrlGroup');
+        const modelSelectGroup = getElement('modelSelectGroup');
+        const modelSelect = getElement('modelSelect');
+        const refreshModels = getElement('refreshModels');
+        const aiTemperature = getElement('aiTemperature');
+        const streamingMode = getElement('streamingMode');
+        const autoSaveMode = getElement('autoSaveMode');
+        const worldSetting = getElement('worldSetting');
+        const saveSettings = getElement('saveSettings');
+
+        // ==================== 属性标签配置 ====================
+        const TRAITS = [
+            { name: '明眸皓齿', effect: { cha: 5 }, desc: '初始魅力+5' },
+            { name: '冰肌玉骨', effect: { cha: 10 }, desc: '初始魅力+10' },
+            { name: '貌若无盐', effect: { cha: -10 }, desc: '初始魅力-10' },
+            { name: '多智近妖', effect: { wis: 15, wisGrowth: 1.1 }, desc: '智慧+15，获取经验+10%' },
+            { name: '天资愚钝', effect: { wis: -10, wisGrowth: 0.9 }, desc: '智慧-10，获取经验-10%' },
+            { name: '天生病弱', effect: { phys: -10, hp: -10, physGrowth: 0.9 }, desc: '体魄-10，生命-10，获取经验-10%' },
+            { name: '多才多艺', effect: { art: 10 }, desc: '初始才艺+10' },
+            { name: '体魄强健', effect: { phys: 10, hp: 10 }, desc: '体魄+10，生命+10' },
+            { name: '才疏学浅', effect: { art: -10 }, desc: '初始才艺-10' }
+        ];
+
+        // ==================== 好感/爱慕阶段判断函数 ====================
+        function getFavorStage(favor) {
+            if (favor >= 81) return { name: '挚友', class: 'stage-close' };
+            if (favor >= 61) return { name: '朋友', class: 'stage-friend' };
+            if (favor >= 31) return { name: '熟悉', class: 'stage-familiar' };
+            if (favor >= 11) return { name: '陌生', class: 'stage-stranger' };
+            return { name: '敌视', class: 'stage-hostile' };
+        }
+
+        function getLoveStage(love) {
+            if (love >= 81) return { name: '挚爱', class: 'love-forever' };
+            if (love >= 61) return { name: '恋爱', class: 'love-dating' };
+            if (love >= 31) return { name: '暧昧', class: 'love-crush' };
+            if (love >= 11) return { name: '陌生', class: 'love-stranger' };
+            return { name: '憎恨', class: 'love-hate' };
+        }
+
+        function getRelationBetween(favor, love, canLove, relationship = 'none') {
+            if (relationship === 'married') return '夫妻';
+            if (relationship === 'dating') return '恋人';
+            if (!canLove) return getFavorStage(favor).name;
+            if (love >= 81) return '挚爱';
+            if (love >= 61) return '恋人';
+            if (love >= 31) return '暧昧对象';
+            if (favor >= 81) return '挚友';
+            if (favor >= 61) return '朋友';
+            if (favor >= 31) return '熟人';
+            if (favor >= 11) return '陌生人';
+            return '关系紧张';
+        }
+
+        // ==================== 存档功能 ====================
+        function saveGame() {
+            try {
+                const saveData = {
+                    currentState: currentState,
+                    timestamp: new Date().toLocaleString()
+                };
+                localStorage.setItem('miaojiangSave', JSON.stringify(saveData));
+                showNotification('✅ 游戏已自动保存');
+                return true;
+            } catch (e) {
+                console.error('保存失败:', e);
+                showNotification('❌ 保存失败');
+                return false;
+            }
+        }
+
+        function loadGame() {
+            try {
+                const saved = localStorage.getItem('miaojiangSave');
+                if (saved) {
+                    const saveData = JSON.parse(saved);
+                    if (saveData.currentState) {
+                        currentState = saveData.currentState;
+                        showNotification('📂 加载上次存档');
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.error('加载失败:', e);
+            }
+            return false;
+        }
+
+        // ==================== 退出时自动存档 ====================
+        window.addEventListener('beforeunload', function() {
+            if (autoSaveMode && autoSaveMode.value === 'true') {
+                saveGame();
+            }
+        });
+
+        // ==================== 节日系统 ====================
+        const FESTIVALS = [
+            {
+                name: '苗年',
+                month: 12,
+                week: 2,
+                description: '苗族最隆重的传统节日，是辞旧迎新、庆祝丰收、祭祀祖先的日子。',
+                activities: [
+                    '祭祖与团圆饭：家家户户准备糯米饭、酸汤鱼、腊肉等祭品祭祖，全家团聚吃年夜饭。',
+                    '长桌宴：长长的桌子从寨子这头摆到那头，几十甚至上百人共享美食。',
+                    '芦笙舞与对歌：男女老少穿上盛装，在芦笙伴奏下跳舞，青年男女通过对歌表达爱意。',
+                    '斗牛、斗鸡：传统比赛，以赛会友。'
+                ],
+                effects: (state) => {
+                    Object.keys(state.characters).forEach(name => {
+                        state.characters[name].favor = Math.min(100, (state.characters[name].favor || 0) + 5);
+                    });
+                    state.baseArt += 3;
+                    state.mind = Math.min(100, (state.mind || 92) + 10);
+                    return '🎉 苗年到了！全寨上下喜气洋洋，你的才艺提升了，精神焕发！';
+                }
+            },
+            {
+                name: '花山节',
+                month: 5,
+                week: 1,
+                description: '也叫“跳花坡”，是苗族青年男女的社交盛会，充满了浪漫气息。',
+                activities: [
+                    '盛装对歌：青年男女通过对歌、交换信物来寻找心仪的对象。',
+                    '爬花杆与斗牛：竞技活动，气氛热烈。'
+                ],
+                effects: (state) => {
+                    Object.keys(state.characters).forEach(name => {
+                        if (state.characters[name].canLove) {
+                            state.characters[name].favor = Math.min(100, (state.characters[name].favor || 0) + 8);
+                        }
+                    });
+                    state.baseCha += 5;
+                    return '🌸 花山节到了！青年男女盛装对歌，你的魅力提升了！';
+                }
+            },
+            {
+                name: '赶秋节',
+                month: 8,
+                week: 3,
+                description: '苗族为青年男女而设的节日，青年男女聚集在山场上唱歌跳舞。',
+                activities: [
+                    '山场对歌：青年男女聚集在山场上唱歌跳舞。',
+                    '交换信物：互赠礼物表达心意。'
+                ],
+                effects: (state) => {
+                    Object.keys(state.characters).forEach(name => {
+                        if (state.characters[name].canLove) {
+                            state.characters[name].love = Math.min(100, (state.characters[name].love || 0) + 5);
+                        }
+                    });
+                    state.baseCha += 3;
+                    return '🍁 赶秋节到了！山场上歌声悠扬，你的魅力提升了！';
+                }
+            }
+        ];
