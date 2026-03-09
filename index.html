@@ -707,29 +707,29 @@
             to { opacity: 1; }
         }
     </style>
-</head>/* 修复手机select下拉菜单放大问题 */
-@media screen and (max-width: 500px) {
-    select, input, button {
-        font-size: 16px !important;  /* 防止iOS自动缩放 */
-    }
+</head>    /* 所有已有的CSS代码... */
     
-    select:focus {
-        font-size: 16px !important;
+    /* 修复手机select下拉菜单放大问题 */
+    @media screen and (max-width: 500px) {
+        select, input, button {
+            font-size: 16px !important;
+        }
+        select:focus {
+            font-size: 16px !important;
+        }
+        .settings-select {
+            transform: scale(1) !important;
+            -webkit-transform: scale(1) !important;
+            max-height: 40px;
+        }
+        select option {
+            font-size: 14px !important;
+            background: #103326;
+            color: #f4ecd9;
+        }
     }
-    
-    /* 强制select不放大 */
-    .settings-select {
-        transform: scale(1) !important;
-        -webkit-transform: scale(1) !important;
-        max-height: 40px;
-    }
-    
-    /* 修复选项列表 */
-    select option {
-        font-size: 14px !important;
-        background: #103326;
-        color: #f4ecd9;
-    }
+</style>  <!-- 闭合style标签 -->
+</head>
 }<body>
     <!-- 独立链接入口 -->
     <div id="entryPortal" class="entry-portal">
