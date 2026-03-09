@@ -2656,6 +2656,646 @@ ${currentState.playerName}对你说：${message}
         }
 
         // ==================== 自由输入 ====================
+freeSubmit.addEventListener('click', () => {
+    if (isApiCalling || gameOver) return;
+
+    const custom = freeInput.value.trim();
+    if (custom === '') {
+        alert('请输入你想做的事');
+        return;
+    }
+    generateAIContent(custom);
+    freeInput.value = '';
+});
+
+
+                    // ==================== 渲染人际关系 ====================
+        function renderCharacters() {
+            if (!characterGrid) return;
+            characterGrid.innerHTML = '';
+            
+            Object.keys(currentState.characters).forEach(name => {
+                const char = currentState.characters[name];
+                const card = document.createElement('div');
+                card.className = `character-card ${selectedCharacter === name ? 'selected' : ''} ${char.status === '已故' ? 'dead' : ''}`;
+                card.innerHTML = `
+                    <div class="character-name">${name} ${char.status === '已故' ? '💀' : ''}</div>
+                    <div class="character-relation">${char.role}</div>
+                `;
+                card.addEventListener('click', () => selectCharacter(name));
+                characterGrid.appendChild(card);
+            });
+        }
+
+        // ==================== 选择人物 ====================
+        function selectCharacter(name) {
+            if (inChatMode) exitChatMode();
+            
+            selectedCharacter = name;
+            const char = currentState.characters[name];
+            
+            detailName.innerText = name;
+            detailAge.innerText = char.age;
+            detailRole.innerText = char.role;
+            detailPersonality.innerText = char.personality;
+            detailAppearance.innerText = char.appearance || '普通样貌';
+            detailFavor.innerText = char.favor;
+            detailLove.innerText = char.love;
+            detailStatus.innerText = char.status;
+            detailDesc.innerText = char.desc || '暂无描述';
+            
+            characterDetail.classList.remove('panel-hidden');
+            
+            if (char.status === '已故') {
+                talkBtn.style.display = 'none';
+                giftBtn.style.display = 'none';
+                worshipBtn.style.display = 'block';
+                backFromChatBtn.style.display = 'none';
+            } else {
+                talkBtn.style.display = 'block';
+                giftBtn.style.display = 'block';
+                worshipBtn.style.display = 'none';
+                backFromChatBtn.style.display = 'none';
+            }
+            
+            chatInterface.style.display = 'none';
+            giftPanel.style.display = 'none';
+            
+            renderCharacters();
+        }
+
+        // ==================== 祭拜功能 ====================
+        function worshipNPC() {
+            if (!selectedCharacter) return;
+            
+            const char = currentState.characters[selectedCharacter];
+            if (char.status !== '已故') {
+                alert('只有已故的NPC才能祭拜');
+                return;
+            }
+            
+            currentState.mind = Math.min(100, currentState.mind + 10);
+            
+            const gifts = ['草药', '糯米糕', '贝币'];
+            const gift = gifts[Math.floor(Math.random() * gifts.length)];
+            
+            let result = `你在${selectedCharacter}的坟前祭拜，回忆起过去的点点滴滴，心情渐渐平静。`;
+            
+            if (gift === '草药') {
+                currentState.items.herb = (currentState.items.herb || 0) + 1;
+                result += ' 你在坟前发现了一株草药。';
+            } else if (gift === '糯米糕') {
+                currentState.items.ricecake = (currentState.items.ricecake || 0) + 1;
+                result += ' 有人在坟前放了糯米糕，你带走了。';
+            } else {
+                currentState.money += 5;
+                result += ' 你在坟前发现了5枚贝币。';
+            }
+            
+            if (storyDisplay) {
+                storyDisplay.innerHTML = `<p>${result}</p>`;
+            }
+            
+            refreshUI();
+        }
+
+        // ==================== 进入聊天模式 ====================
+        function enterChatMode() {
+            if (!selectedCharacter) return;
+            
+            const char = currentState.characters[selectedCharacter];
+            if (char.status === '已故') {
+                alert('无法与已故的NPC聊天');
+                return;
+            }
+            
+            inChatMode = true;
+            
+            chatName.innerText = selectedCharacter;
+            chatStatus.innerText = `好感:${char.favor} 爱慕:${char.love}`;
+            
+            if (!currentState.chatHistory[selectedCharacter]) {
+                currentState.chatHistory[selectedCharacter] = [];
+            }
+            
+            displayChatMessages();
+            
+            chatInterface.style.display = 'block';
+            talkBtn.style.display = 'none';
+            giftBtn.style.display = 'none';
+            worshipBtn.style.display = 'none';
+            backFromChatBtn.style.display = 'block';
+        }
+
+        // ==================== 退出聊天模式 ====================
+        function exitChatMode() {
+            inChatMode = false;
+            chatInterface.style.display = 'none';
+            if (selectedCharacter) {
+                selectCharacter(selectedCharacter);
+            }
+        }
+
+        // ==================== 显示聊天消息 ====================
+        function displayChatMessages() {
+            if (!chatMessages || !selectedCharacter) return;
+            
+            const history = currentState.chatHistory[selectedCharacter] || [];
+            chatMessages.innerHTML = history.map(msg => {
+                const isPlayer = msg.sender === '你';
+                return `
+                    <div class="${isPlayer ? 'message-right' : 'message-left'}">
+                        <div class="bubble">${msg.text}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // ==================== 发送聊天消息 ====================
+        async function sendChatMessage() {
+            if (!selectedCharacter || !chatInput) return;
+            
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            const char = currentState.characters[selectedCharacter];
+            
+            currentState.chatHistory[selectedCharacter].push({
+                sender: '你',
+                text: message
+            });
+            
+            displayChatMessages();
+            chatInput.value = '';
+            
+            apiMessageSpan.innerText = '🤔 回复中...';
+            apiSpinner.style.display = 'inline-block';
+            setButtonsDisabled(true);
+            
+            const prompt = `你是${selectedCharacter}，${char.role}，性格${char.personality}。
+当前与${currentState.playerName}的好感度是${char.favor}，爱慕值是${char.love}。
+
+${currentState.playerName}对你说：${message}
+
+请以${selectedCharacter}的身份，用自然的口吻回复这句话。回复要符合角色性格，可以影响好感度。`;
+
+            try {
+                let response = '';
+                
+                if (currentState.settings.apiMode === 'local') {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    const responses = [
+                        `“嗯，我知道了。”`,
+                        `“今天天气不错。”`,
+                        `“你最近怎么样？”`,
+                        `“我很高兴见到你。”`,
+                        `“你说得对。”`,
+                        `“让我想想...”`
+                    ];
+                    response = responses[Math.floor(Math.random() * responses.length)];
+                    
+                    if (message.includes('喜欢') || message.includes('爱')) {
+                        if (char.canLove) {
+                            char.love = Math.min(100, char.love + 2);
+                            response = `“你...你说什么呢。”`;
+                        }
+                        char.favor = Math.min(100, char.favor + 2);
+                    } else if (message.includes('谢谢')) {
+                        char.favor = Math.min(100, char.favor + 1);
+                    } else if (message.includes('对不起') || message.includes('抱歉')) {
+                        char.favor = Math.min(100, char.favor + 1);
+                    }
+                } else {
+                    const settings = currentState.settings;
+                    const provider = settings.apiProvider || 'deepseek';
+                    
+                    let apiResponse;
+                    
+                    if (provider === 'gemini') {
+                        const geminiUrl = settings.apiEndpoint.includes('?key=') 
+                            ? settings.apiEndpoint 
+                            : `${settings.apiEndpoint}?key=${settings.apiKey}`;
+                        
+                        apiResponse = await fetch(geminiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                contents: [{
+                                    parts: [{ text: prompt }]
+                                }],
+                                generationConfig: {
+                                    temperature: parseFloat(settings.temperature),
+                                    maxOutputTokens: 500
+                                }
+                            })
+                        });
+                        
+                        const data = await apiResponse.json();
+                        response = data.candidates?.[0]?.content?.parts?.[0]?.text || '“...”';
+                    } else {
+                        apiResponse = await fetch(settings.apiEndpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${settings.apiKey}`
+                            },
+                            body: JSON.stringify({
+                                model: settings.model,
+                                messages: [{ role: 'user', content: prompt }],
+                                temperature: parseFloat(settings.temperature)
+                            })
+                        });
+                        
+                        const data = await apiResponse.json();
+                        response = data.choices?.[0]?.message?.content || 
+                                  data.choices?.[0]?.text || 
+                                  '“...”';
+                    }
+                    
+                    if (response.includes('喜欢') || response.includes('爱')) {
+                        char.favor = Math.min(100, char.favor + 3);
+                        if (char.canLove) char.love = Math.min(100, char.love + 2);
+                    } else if (response.includes('谢谢')) {
+                        char.favor = Math.min(100, char.favor + 2);
+                    } else if (response.includes('哈哈') || response.includes('呵呵')) {
+                        char.favor = Math.min(100, char.favor + 1);
+                    }
+                }
+                
+                currentState.chatHistory[selectedCharacter].push({
+                    sender: selectedCharacter,
+                    text: response
+                });
+                
+                displayChatMessages();
+                chatStatus.innerText = `好感:${char.favor} 爱慕:${char.love}`;
+                
+            } catch (error) {
+                console.error('聊天失败:', error);
+                currentState.chatHistory[selectedCharacter].push({
+                    sender: selectedCharacter,
+                    text: '“...”'
+                });
+                displayChatMessages();
+            }
+            
+            apiMessageSpan.innerText = '✅ 完成';
+            apiSpinner.style.display = 'none';
+            setButtonsDisabled(false);
+            refreshUI();
+        }
+
+        // ==================== 打开送礼面板 ====================
+        function openGiftPanel() {
+            if (!selectedCharacter) return;
+            
+            const char = currentState.characters[selectedCharacter];
+            if (char.status === '已故') {
+                alert('无法给已故的NPC送礼');
+                return;
+            }
+            
+            const gifts = [
+                { name: '糯米糕', key: 'ricecake', icon: '🍚', favor: 8, love: 3, desc: '香甜软糯' },
+                { name: '绣线', key: 'thread', icon: '🧵', favor: 5, love: 2, desc: '彩色丝线' },
+                { name: '草药', key: 'herb', icon: '🌿', favor: 6, love: 1, desc: '清新药香' },
+                { name: '银镯', key: 'silver', icon: '✨', favor: 15, love: 8, desc: '精美银饰' }
+            ];
+            
+            giftItems.innerHTML = '';
+            let hasGifts = false;
+            
+            gifts.forEach(gift => {
+                const count = currentState.items[gift.key] || 0;
+                if (count > 0) {
+                    hasGifts = true;
+                    const item = document.createElement('div');
+                    item.className = `gift-item ${selectedGift === gift.key ? 'selected' : ''}`;
+                    item.dataset.key = gift.key;
+                    item.dataset.name = gift.name;
+                    item.dataset.favor = gift.favor;
+                    item.dataset.love = gift.love;
+                    item.dataset.desc = gift.desc;
+                    item.innerHTML = `${gift.icon} ${gift.name}<br><small>${gift.desc}</small><br>(${count})`;
+                    item.onclick = () => selectGift(gift.key);
+                    giftItems.appendChild(item);
+                }
+            });
+            
+            if (!hasGifts) {
+                giftItems.innerHTML = '<div style="color:#ff6b6b; text-align:center; grid-column:span 3;">没有可送的礼物</div>';
+            }
+            
+            giftPanel.style.display = 'block';
+            talkBtn.style.display = 'none';
+            giftBtn.style.display = 'none';
+            worshipBtn.style.display = 'none';
+            backFromChatBtn.style.display = 'block';
+        }
+
+        // ==================== 选择礼物 ====================
+        function selectGift(key) {
+            if (selectedGift === key) {
+                selectedGift = null;
+                document.querySelectorAll('.gift-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+            } else {
+                selectedGift = key;
+                document.querySelectorAll('.gift-item').forEach(item => {
+                    item.classList.remove('selected');
+                    if (item.dataset.key === key) {
+                        item.classList.add('selected');
+                    }
+                });
+            }
+        }
+
+        // ==================== 确认送礼 ====================
+        function confirmGift() {
+            if (!selectedCharacter || !selectedGift) {
+                alert('请先选择礼物');
+                return;
+            }
+            
+            const char = currentState.characters[selectedCharacter];
+            const giftKey = selectedGift;
+            
+            if (currentState.items[giftKey] <= 0) {
+                alert('礼物数量不足');
+                return;
+            }
+            
+            const giftItem = document.querySelector(`[data-key="${giftKey}"]`);
+            const giftName = giftItem.dataset.name;
+            const favorGain = parseInt(giftItem.dataset.favor);
+            const loveGain = parseInt(giftItem.dataset.love);
+            
+            currentState.items[giftKey]--;
+            
+            char.favor = Math.min(100, char.favor + favorGain);
+            if (char.canLove) {
+                char.love = Math.min(100, char.love + loveGain);
+            }
+            
+            const result = char.canLove && loveGain > 0 ?
+                `${selectedCharacter}接过${giftName}，脸微微发红：“谢谢你，我很喜欢！”` :
+                `${selectedCharacter}接过${giftName}，笑着说：“谢谢你的心意。”`;
+            
+            if (storyDisplay) {
+                storyDisplay.innerHTML = `<p>${result}</p>`;
+            }
+            
+            if (!currentState.chatHistory[selectedCharacter]) {
+                currentState.chatHistory[selectedCharacter] = [];
+            }
+            currentState.chatHistory[selectedCharacter].push({
+                sender: '你',
+                text: `送给你${giftName}`
+            });
+            currentState.chatHistory[selectedCharacter].push({
+                sender: selectedCharacter,
+                text: result
+            });
+            
+            giftPanel.style.display = 'none';
+            selectedGift = null;
+            
+            if (selectedCharacter) {
+                selectCharacter(selectedCharacter);
+            }
+            
+            refreshUI();
+        }
+
+        // ==================== 渲染物品 ====================
+        function renderItems() {
+            if (!itemsGrid) return;
+            itemsGrid.innerHTML = `
+                <div class="item-card">贝币<br>💰 ${currentState.money}</div>
+                <div class="item-card">糯米糕<br>🍚 ${currentState.items.ricecake}</div>
+                <div class="item-card">绣线<br>🧵 ${currentState.items.thread}</div>
+                <div class="item-card">银镯<br>✨ ${currentState.items.silver}</div>
+                <div class="item-card">草药<br>🌿 ${currentState.items.herb}</div>
+            `;
+        }
+
+        // ==================== 下一回合 ====================
+        function nextTurn() {
+            if (isApiCalling || gameOver) return;
+            
+            currentState.week++;
+            
+            currentState.exploredThisTurn = {};
+            if (exploredCount) exploredCount.innerText = '0';
+            
+            if (currentState.week % 52 === 0) {
+                currentState.playerAge++;
+                
+                Object.keys(currentState.characters).forEach(name => {
+                    const char = currentState.characters[name];
+                    if (char.status !== '已故') {
+                        const npcAge = char.age + Math.floor(currentState.week / 52);
+                        if (npcAge >= char.lifespan) {
+                            char.status = '已故';
+                            if (storyDisplay) {
+                                storyDisplay.innerHTML += `<p>😢 ${name} 去世了...</p>`;
+                            }
+                        }
+                    }
+                });
+            }
+            
+            const newSeason = getSeasonFromWeek(currentState.week);
+            const season = getSeasonType(currentState.week);
+            
+            let seasonMsg = '';
+            if (season === 'spring') seasonMsg = '春天来了，万物复苏。';
+            else if (season === 'summer') seasonMsg = '夏天到了，蝉鸣阵阵。';
+            else if (season === 'autumn') seasonMsg = '秋天是收获的季节。';
+            else seasonMsg = '冬天降临，白雪皑皑。';
+            
+            if (playerChoiceDisplay) playerChoiceDisplay.innerText = seasonMsg;
+            
+            renderMap();
+            refreshUI();
+        }
+
+        // ==================== 重置游戏 ====================
+        function resetGame() {
+            // 添加API配置提示
+            if (currentState.settings.apiMode === 'custom' && !currentState.settings.apiKey) {
+                setTimeout(() => {
+                    alert('🔔 提示：当前使用真实API模式，但未配置API密钥。\n\n请到【设置】中：\n1. 选择API提供商（DeepSeek/Gemini/OpenAI）\n2. 填写对应的API密钥\n3. 点击"测试连接"验证\n\n可到对应官网免费获取密钥。');
+                }, 1000);
+            }
+            
+            const { traitNames, traitEffects } = assignRandomTraits();
+            
+            currentState = {
+                playerName: playerName.value || '阿苗',
+                playerAge: 18,
+                traitNames: traitNames,
+                traitEffects: traitEffects,
+                week: 1,
+                location: '青榕寨',
+                baseCha: 50, baseWis: 50, basePhys: 50, baseArt: 50,
+                hp: 100, mind: 92,
+                money: 25,
+                mapCells: [],
+                exploredThisTurn: {},
+                items: { ricecake: 0, thread: 0, silver: 0, herb: 0 },
+                characters: {
+                    '阿妈': { age: 45, role: '母亲', personality: '慈祥', appearance: '头发花白', desc: '你的母亲，从小把你抚养长大。', favor: 80, love: 0, status: '健康', canLove: false, lifespan: 75 },
+                    '彩': { age: 19, role: '好友', personality: '活泼', appearance: '眼睛明亮', desc: '从小一起长大的玩伴。', favor: 50, love: 0, status: '健康', canLove: true, lifespan: 70 },
+                    '寨公': { age: 52, role: '长老', personality: '威严', appearance: '花白胡须', desc: '寨子里的长老。', favor: 20, love: 0, status: '健康', canLove: false, lifespan: 80 },
+                    '姜央': { age: 20, role: '寨主', personality: '勇敢', appearance: '身材挺拔', desc: '年轻的寨主。', favor: 20, love: 0, status: '健康', canLove: true, lifespan: 75 }
+                },
+                settings: currentState.settings,
+                chatHistory: {},
+                storyContext: [],
+                lastChoice: ''
+            };
+            
+            initMap();
+            
+            if (playerChoiceDisplay) {
+                playerChoiceDisplay.innerText = '游戏开始，请选择行动';
+            }
+            
+            if (storyDisplay) {
+                storyDisplay.innerHTML = `
+                    <p>晨雾还挂在吊脚楼角，你推开竹窗，青榕寨在鸟鸣中醒来。</p>
+                    <p>你今年18岁了，山脚榕树下，年轻人们正在扎堆，似乎要比试芦笙。</p>
+                `;
+            }
+            
+            renderChoiceButtons(['🌽 赶场', '🎵 芦笙', '🛏️ 帮阿妈']);
+            refreshUI();
+            apiMessageSpan.innerText = '⏳ 等待指令';
+            selectedCharacter = null;
+            gameOver = false;
+        }
+
+        // ==================== 进入/退出游戏 ====================
+        function enterGame() {
+            entryPortal.style.display = 'none';
+            gameMain.style.display = 'block';
+            resetGame();
+        }
+
+        function backToEntry() {
+            if (abortController) {
+                abortController.abort();
+            }
+            gameMain.style.display = 'none';
+            entryPortal.style.display = 'block';
+        }
+
+        // ==================== 存档功能 ====================
+        function saveGame() {
+            try {
+                const saveState = JSON.parse(JSON.stringify(currentState));
+                localStorage.setItem('miaojiangSave', JSON.stringify(saveState));
+                alert('✅ 存档成功');
+            } catch (e) {
+                console.error('存档失败:', e);
+                alert('❌ 存档失败');
+            }
+        }
+
+        function loadGame() {
+            try {
+                const saved = localStorage.getItem('miaojiangSave');
+                if (saved) {
+                    currentState = JSON.parse(saved);
+                    refreshUI();
+                    renderMap();
+                    
+                    if (playerChoiceDisplay) {
+                        playerChoiceDisplay.innerText = '存档已加载';
+                    }
+                    
+                    alert('📂 加载存档成功');
+                    return true;
+                }
+            } catch (e) {
+                console.error('加载失败:', e);
+            }
+            return false;
+        }
+
+        // ==================== 标签切换 ====================
+        tabItems.forEach(tab => {
+            tab.addEventListener('click', () => {
+                if (inChatMode) exitChatMode();
+                
+                tabItems.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                storyPanel.classList.add('panel-hidden');
+                relationPanel.classList.add('panel-hidden');
+                networkPanel.classList.add('panel-hidden');
+                mapPanel.classList.add('panel-hidden');
+                itemsPanel.classList.add('panel-hidden');
+                settingsPanel.classList.add('panel-hidden');
+                
+                const tabName = tab.dataset.tab;
+                if (tabName === 'story') storyPanel.classList.remove('panel-hidden');
+                else if (tabName === 'relation') {
+                    relationPanel.classList.remove('panel-hidden');
+                    renderCharacters();
+                }
+                else if (tabName === 'network') {
+                    networkPanel.classList.remove('panel-hidden');
+                    renderRelationTable();
+                }
+                else if (tabName === 'map') {
+                    mapPanel.classList.remove('panel-hidden');
+                    renderMap();
+                }
+                else if (tabName === 'items') {
+                    itemsPanel.classList.remove('panel-hidden');
+                    renderItems();
+                }
+                else if (tabName === 'settings') settingsPanel.classList.remove('panel-hidden');
+            });
+        });
+
+        // ==================== 保存设置 ====================
+        saveSettings.addEventListener('click', () => {
+            currentState.playerName = playerName.value || '阿苗';
+            currentState.settings = {
+                apiMode: 'custom',
+                apiProvider: apiProvider.value,
+                apiEndpoint: apiEndpoint.value,
+                apiKey: apiKey.value,
+                model: modelSelect.value,
+                temperature: aiTemperature.value,
+                streaming: streamingMode.value === 'true',
+                worldSetting: worldSetting.value
+            };
+            playerNameDisplay.innerText = currentState.playerName;
+            
+            apiModeBadge.innerText = '⚡ 真实API';
+            
+            alert('✅ 设置已保存');
+        });
+
+        // ==================== 获取模型 ====================
+        fetchModelsBtn.addEventListener('click', fetchModels);
+
+        // ==================== 测试API连接 ====================
+        if (testApiBtn) {
+            testApiBtn.addEventListener('click', testApiConnection);
+        }
+
+        // ==================== 自由输入 ====================
         freeSubmit.addEventListener('click', () => {
             if (isApiCalling || gameOver) return;
             
@@ -2722,6 +3362,18 @@ ${currentState.playerName}对你说：${message}
         });
 
         confirmGiftBtn.addEventListener('click', confirmGift);
+
+        // ==================== 为选项按钮添加点击事件 ====================
+        const choiceBtns = document.querySelectorAll('.choice-btn');
+        choiceBtns.forEach(btn => {
+            if (!btn.id || (btn.id !== 'talkBtn' && btn.id !== 'giftBtn' && btn.id !== 'worshipBtn' && btn.id !== 'backFromChatBtn' && btn.id !== 'confirmGiftBtn' && btn.id !== 'saveSettings' && btn.id !== 'fetchModelsBtn' && btn.id !== 'testApiBtn')) {
+                btn.addEventListener('click', function() {
+                    if (isApiCalling || inChatMode || gameOver) return;
+                    const action = this.innerText;
+                    generateAIContent(action);
+                });
+            }
+        });
 
         // ==================== 初始化 ====================
         entryPortal.style.display = 'block';
