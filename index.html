@@ -3391,7 +3391,14 @@ ${currentState.playerName}对你说：${message}
         }
         
         initMap();
-    })();
+    })// 强制隐藏玩家选择区
+setTimeout(function() {
+    const playerChoice = document.getElementById('playerChoiceDisplay');
+    if (playerChoice) {
+        playerChoice.style.display = 'none';
+        console.log('玩家选择区已隐藏');
+    }
+}, 100);();
 </script>
 </body>
 </html>
