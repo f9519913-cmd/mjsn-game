@@ -1489,6 +1489,34 @@
             renderMap();
         }
 
+        const LOCATION_ACTIONS = {
+            '青榕寨': ['四处走走', '找人闲聊', '帮家里做事'],
+            '溪边': ['洗衣戏水', '捉鱼摸虾', '静听水声'],
+            '竹林': ['挖竹笋', '林间漫步', '收集竹叶'],
+            '药田': ['帮忙采药', '辨认草药', '给阿婆打下手'],
+            '集市': ['逛摊买卖', '听人闲谈', '挑些小物'],
+            '祠堂': ['静坐冥想', '祈福祭拜', '打扫香案'],
+            '山脚': ['练习芦笙', '结伴上山', '在树下休息'],
+            '梯田': ['帮忙耕种', '欣赏风景', '给人送水'],
+            '枫树林': ['拾落叶', '林间漫步', '寻找野果'],
+            '后山': ['采蘑菇', '寻找野果', '散步看景'],
+            '瀑布': ['取清水', '赏瀑纳凉', '洗去疲惫'],
+            '山洞': ['探洞寻宝', '躲雨歇息', '观察岩壁'],
+            '花坡': ['采花', '编花环', '坐看蝶舞'],
+            '茶园': ['采茶', '品新茶', '帮忙晾茶'],
+            '蜂场': ['取蜂蜜', '帮忙照看蜂箱', '学习认花']
+        };
+
+        function updateExploredCount() {
+            if (exploredCount) {
+                exploredCount.innerText = String(Object.keys(currentState.exploredThisTurn).length);
+            }
+        }
+
+        function getLocationActions(locationName) {
+            return LOCATION_ACTIONS[locationName] || ['四处看看', '和人聊聊', '稍作歇息'];
+        }
+
         function renderMap() {
             if (!mapGrid) return;
             const season = getSeasonType(currentState.week);
@@ -1504,7 +1532,76 @@
                 cellDiv.onclick = () => selectLocation(index);
                 mapGrid.appendChild(cellDiv);
             });
-        }// ==================== 本地模拟地点行动（备用）====================
+        }
+
+        function selectLocation(index) {
+            if (isApiCalling || gameOver) return;
+
+            const cell = currentState.mapCells[index];
+            if (!cell) return;
+
+            if (currentState.exploredThisTurn[index]) {
+                showMapMessage(`本回合已经探索过${cell.name}了，换个地方看看吧。`);
+                return;
+            }
+
+            currentState.selectedLocation = index;
+            showMapMessage(`${cell.name}：${cell.desc}`);
+
+            if (selectedLocationName) {
+                selectedLocationName.innerText = `📍 ${cell.name}`;
+            }
+
+            if (!actionButtons || !locationActions) return;
+
+            actionButtons.innerHTML = '';
+
+            getLocationActions(cell.name).forEach(action => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'choice-btn action-btn';
+                btn.innerText = action;
+                btn.addEventListener('click', () => handleLocationAction(index, action));
+                actionButtons.appendChild(btn);
+            });
+
+            locationActions.style.display = 'block';
+        }
+
+        async function handleLocationAction(index, action) {
+            if (isApiCalling || gameOver) return;
+
+            const cell = currentState.mapCells[index];
+            if (!cell) return;
+
+            if (currentState.exploredThisTurn[index]) {
+                showMapMessage(`本回合已经探索过${cell.name}了，换个地方看看吧。`);
+                return;
+            }
+
+            currentState.selectedLocation = index;
+            currentState.location = cell.name;
+            currentState.exploredThisTurn[index] = true;
+            cell.explored = true;
+
+            updateExploredCount();
+            refreshUI();
+            renderMap();
+            showMapMessage(`你来到${cell.name}，准备${action}。`);
+
+            if (locationActions) {
+                locationActions.style.display = 'none';
+            }
+
+            if (currentState.settings.apiMode === 'local') {
+                await simulateLocalLocationAction(cell.name, action);
+                return;
+            }
+
+            await generateAIContent(action);
+        }
+
+        // ==================== 本地模拟地点行动（备用）====================
         async function simulateLocalLocationAction(location, action) {
             return new Promise(resolve => {
                 setTimeout(() => {
