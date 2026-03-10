@@ -2583,6 +2583,197 @@ ${currentState.playerName}对你说：${message}
                         char.favor = Math.min(100, char.favor + 2);
                     }
                 } else {
+                // ==================== AI剧情生成（高创作要求版）====================
+        async function generateAIContent(action) {
+            if (isApiCalling) return;
+            
+            isApiCalling = true;
+            currentState.lastChoice = action;
+            
+            // 显示玩家选择
+            if (playerChoiceDisplay) playerChoiceDisplay.innerText = action;
+            
+            // 禁用按钮
+            setButtonsDisabled(true);
+            
+            apiMessageSpan.innerText = '🤔 AI精心创作中...';
+            apiSpinner.style.display = 'inline-block';
+
+            try {
+                if (currentState.settings.apiMode === 'local') {
+                    await localStory(action);
+                } else {
+                    await apiStory(action);
+                }
+            } catch (error) {
+                console.error('错误:', error);
+                storyDisplay.innerHTML = `<p style="color:#ffaaaa;">创作遇阻，启用本地故事...</p>`;
+                await localStory(action);
+            }
+            
+            isApiCalling = false;
+            setButtonsDisabled(false);
+            apiSpinner.style.display = 'none';
+        }
+
+        // ==================== API模式（高要求版）====================
+        async function apiStory(action) {
+            const settings = currentState.settings;
+            
+            if (!settings.apiKey) {
+                storyDisplay.innerHTML = '<p style="color:#ffaa00;">✨ 请先配置API密钥，开启精彩故事</p>';
+                renderChoiceButtons(['🌾 继续', '🏡 回家']);
+                return;
+            }
+
+            // 获取当前状态用于创作
+            const stats = calculateStats();
+            const season = getSeasonFromWeek(currentState.week);
+            const weather = ['晴空万里', '薄雾缭绕', '细雨蒙蒙', '阳光明媚', '微风和煦'][Math.floor(Math.random() * 5)];
+            const timeOfDay = ['晨曦初露', '旭日东升', '艳阳高照', '夕阳西下', '月色如水'][Math.floor(Math.random() * 5)];
+
+            // 构建高要求的创作提示词
+            const prompt = `你是一位文笔优美、擅写苗族风情的文学创作者，正在创作苗疆少女${currentState.playerName}的传奇人生。
+
+【此刻情境】
+时间：${season}·第${currentState.week}周，${timeOfDay}，${weather}
+主角：${currentState.playerName}，${currentState.playerAge}岁
+心境：精神${currentState.mind}，贝币${currentState.money}枚
+所在：${currentState.location}
+
+【人物属性】
+魅力：${stats.cha}（影响他人对你的态度）
+智慧：${stats.wis}（影响你的见识与抉择）
+体魄：${stats.phys}（影响你的活力与耐力）
+才艺：${stats.art}（影响你的技艺与表现）
+
+【身边人物】
+${Object.entries(currentState.characters)
+    .filter(([_, c]) => c.status === '健康')
+    .map(([name, c]) => `- ${name}（${c.role}，性格${c.personality}，对你${c.favor > 70 ? '亲近' : c.favor > 40 ? '友善' : '平常'}`)
+    .join('\n')}
+
+【随身物品】
+${Object.entries(currentState.items)
+    .filter(([_, count]) => count > 0)
+    .map(([key, count]) => {
+        const item = ITEMS_LIBRARY.find(i => i.key === key);
+        return item ? `- ${item.icon} ${item.name} ×${count}` : '';
+    })
+    .filter(s => s)
+    .join('\n') || '暂无特殊物品'}
+
+【玩家选择】
+${currentState.playerName}决定：${action}
+
+━━━━━━━━━━━━━━━━━━━━
+【创作要求】
+━━━━━━━━━━━━━━━━━━━━
+
+🎯 字数要求：1500字以上，要写得酣畅淋漓
+
+📖 文笔要求：
+- 运用优美的文学语言，营造身临其境的画面感
+- 细腻描写环境：山色、云雾、溪流、花木、鸟兽
+- 刻画人物神态：眼神、语气、动作、微表情
+- 展现心理活动：内心独白、情感起伏、思绪流转
+- 融入苗族风情：服饰、习俗、歌谣、传说
+
+💞 人物互动要求：
+- 根据好感度自然展现NPC的态度变化
+- 对话要符合人物性格（慈祥的阿妈、活泼的彩、威严的寨公、深情的姜央）
+- 通过细节展现情感发展
+
+✨ 剧情发展要求：
+- 剧情要有起伏转折，避免平淡
+- 可以引入小冲突、小惊喜、小感动
+- 让玩家感受到选择带来的影响
+
+📝 结尾标注要求（必须）：
+- 好感变化：（彩好感+2）
+- 物品获得：（竹笋+3）（蜂蜜+1）
+- 属性提升：（魅力+1）（才艺+2）
+
+🎪 选项要求：
+- 最后给出4-5个富有想象力的后续选项
+- 用【】括起来，例如：【去溪边听彩唱歌】【找阿妈学新绣法】【独自上山寻宝】
+
+━━━━━━━━━━━━━━━━━━━━
+请开始你的创作：
+`;
+
+            try {
+                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${settings.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.85, // 稍高的温度让文采更丰富
+                        max_tokens: 4000
+                    })
+                });
+
+                if (!response.ok) throw new Error(`API响应异常: ${response.status}`);
+
+                const data = await response.json();
+                const aiText = data.choices[0].message.content;
+                
+                // 精美展示剧情
+                storyDisplay.innerHTML = `<p style="line-height:1.8; text-indent:2em;">${aiText.replace(/\n/g, '<br>').replace(/（/g, '<span style="color:#f8d58c;">（').replace(/）/g, '）</span>')}</p>`;
+                
+                // 智能提取选项
+                const options = aiText.match(/【(.*?)】/g) || [];
+                if (options.length > 0) {
+                    renderChoiceButtons(options.map(opt => opt.replace(/[【】]/g, '')));
+                } else {
+                    renderChoiceButtons(['🌾 静观其变', '🗣️ 寻人闲谈', '🏡 归家歇息', '🌿 上山探幽']);
+                }
+
+                // 保存精彩故事
+                currentState.storyContext.push({
+                    choice: action,
+                    story: aiText
+                });
+
+                apiMessageSpan.innerText = '✨ 佳作完成';
+
+            } catch (error) {
+                console.error('API创作遇阻:', error);
+                storyDisplay.innerHTML = `<p style="color:#ffaa00;">⚠️ 云端创作暂歇，且听本地故事...</p>`;
+                await localStory(action);
+            }
+        }
+
+        // ==================== 本地模式（备用）====================
+        async function localStory(action) {
+            setTimeout(() => {
+                const stories = [
+                    `你${action}。山间的薄雾如纱，缠绕在竹林之间。露珠从竹叶上滑落，滴在你的肩头，凉丝丝的。远处传来几声鸟鸣，清脆悠长，像是在呼唤着什么。你深深吸了口气，空气中弥漫着青草和泥土的芬芳，这一刻，心格外宁静。`,
+                    
+                    `你${action}。溪水潺潺，清澈见底。你蹲下身，掬起一捧水，冰凉从指尖蔓延到心底。几条小鱼从石缝间游过，倏忽不见。岸边的野花正盛，红的、黄的、紫的，像撒了一地的彩缎。`,
+                    
+                    `你${action}。榕树下，几位老人正在闲谈。他们见你来了，笑着招呼：“丫头，过来坐。”你依言坐下，听他们讲起年轻时的故事，那些关于山、关于水、关于爱情的往事，在夕阳下泛着温暖的光。`
+                ];
+                
+                storyDisplay.innerHTML = `<p style="line-height:1.8;">${stories[Math.floor(Math.random() * stories.length)]}</p>`;
+                renderChoiceButtons(['🌾 静观其变', '🗣️ 寻人闲谈', '🏡 归家歇息', '🌿 上山探幽']);
+                apiMessageSpan.innerText = '🍃 故事已成';
+            }, 800);
+        }
+
+        // ==================== 设置按钮禁用状态 ====================
+        function setButtonsDisabled(disabled) {
+            const buttons = [
+                ...document.querySelectorAll('.choice-btn'),
+                freeSubmit, nextTurnBtn, talkBtn, giftBtn, 
+                worshipBtn, sendChatBtn, confirmGiftBtn, closeActionsBtn
+            ].filter(Boolean);
+            buttons.forEach(btn => btn && (btn.disabled = disabled));
+        }
                     // 调用API
                     const settings = currentState.settings;
                     
