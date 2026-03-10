@@ -839,9 +839,6 @@
             <div class="tab-item" data-tab="settings">设置</div>
         </div>
 
-        <!-- 剧情面板（隐藏） -->
-        <div id="storyPanel" class="content-panel panel-hidden"></div>
-
         <!-- 人际关系面板 -->
         <div id="relationPanel" class="content-panel panel-hidden">
             <div class="character-grid" id="characterGrid"></div>
@@ -1074,7 +1071,6 @@
 
         // 标签导航
         const tabItems = document.querySelectorAll('.tab-item');
-        const storyPanel = document.getElementById('storyPanel');
         const relationPanel = document.getElementById('relationPanel');
         const networkPanel = document.getElementById('networkPanel');
         const mapPanel = document.getElementById('mapPanel');
@@ -3147,7 +3143,6 @@ ${currentState.playerName}对你说：${message}
                 tabItems.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 
-                storyPanel.classList.add('panel-hidden');
                 relationPanel.classList.add('panel-hidden');
                 networkPanel.classList.add('panel-hidden');
                 mapPanel.classList.add('panel-hidden');
@@ -3155,8 +3150,7 @@ ${currentState.playerName}对你说：${message}
                 settingsPanel.classList.add('panel-hidden');
                 
                 const tabName = tab.dataset.tab;
-                if (tabName === 'story') storyPanel.classList.remove('panel-hidden');
-                else if (tabName === 'relation') {
+                if (tabName === 'relation') {
                     relationPanel.classList.remove('panel-hidden');
                     renderCharacters();
                 }
